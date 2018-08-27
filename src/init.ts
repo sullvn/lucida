@@ -10,7 +10,9 @@ function init(el: HTMLCanvasElement) {
   const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragment)
   const program = createProgram(gl, vertexShader, fragmentShader)
 
+  const colorUniformLocation = gl.getUniformLocation(program, 'u_color')
   const positionAttributeLocation = gl.getAttribLocation(program, 'a_position')
+
   const positionBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 
@@ -40,6 +42,8 @@ function init(el: HTMLCanvasElement) {
   gl.clear(gl.COLOR_BUFFER_BIT)
 
   gl.useProgram(program)
+
+  gl.uniform4f(colorUniformLocation, 1, 0, 0.5, 1)
   gl.bindVertexArray(va)
 
   const primitiveType = gl.TRIANGLES
@@ -100,16 +104,9 @@ export function onCanvasLoad(el: HTMLCanvasElement | null) {
     throw new Error('Cannot find canvas element')
   }
 
-  if (INITIALIZED) {
-    return
-  }
-  INITIALIZED = true
-
   resizeCanvas(el)
   init(el)
 }
-
-let INITIALIZED = false
 
 function resizeCanvas(el: HTMLCanvasElement) {
   const dpr = window.devicePixelRatio || 1
