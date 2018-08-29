@@ -1,5 +1,14 @@
 import { fragment, vertex } from './shaders'
+import { createProgram, createShader, resizeCanvas } from './util'
 
+/**
+ * Initialize WebGL canvas
+ *
+ * Resizes canvas, compiles shaders, sets up buffers, and
+ * kicks off rendering.
+ *
+ * @param el HTML canvas DOM element
+ */
 function init(el: HTMLCanvasElement) {
   const gl = el.getContext('webgl2')
   if (gl === null) {
@@ -52,53 +61,6 @@ function init(el: HTMLCanvasElement) {
   gl.drawArrays(primitiveType, drawOffset, count)
 }
 
-function createProgram(
-  gl: WebGLRenderingContext,
-  vertexShader: WebGLShader,
-  fragmentShader: WebGLShader,
-): WebGLProgram {
-  const program = gl.createProgram()
-  if (program === null) {
-    throw new Error('Cannot create shader program')
-  }
-
-  gl.attachShader(program, vertexShader)
-  gl.attachShader(program, fragmentShader)
-  gl.linkProgram(program)
-
-  const success = gl.getProgramParameter(program, gl.LINK_STATUS)
-  if (success) {
-    return program
-  }
-
-  const errorLog = gl.getProgramInfoLog(program) || 'Cannot link shader program'
-  gl.deleteProgram(program)
-  throw new Error(errorLog)
-}
-
-function createShader(
-  gl: WebGLRenderingContext,
-  type: number,
-  source: string,
-): WebGLShader {
-  const shader = gl.createShader(type)
-  if (shader === null) {
-    throw new Error('Cannot create shader')
-  }
-
-  gl.shaderSource(shader, source)
-  gl.compileShader(shader)
-
-  const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS)
-  if (success) {
-    return shader
-  }
-
-  const errorLog = gl.getShaderInfoLog(shader) || 'Cannot compile shader'
-  gl.deleteShader(shader)
-  throw new Error(errorLog)
-}
-
 export function onCanvasLoad(el: HTMLCanvasElement | null) {
   if (el === null) {
     throw new Error('Cannot find canvas element')
@@ -106,19 +68,4 @@ export function onCanvasLoad(el: HTMLCanvasElement | null) {
 
   resizeCanvas(el)
   init(el)
-}
-
-function resizeCanvas(el: HTMLCanvasElement) {
-  const dpr = window.devicePixelRatio || 1
-
-  // Lookup size browser is displaying the canvas and
-  // increase the natural size for Hi-DPI screens
-  const width = Math.floor(el.clientWidth * dpr)
-  const height = Math.floor(el.clientHeight * dpr)
-  if (el.width === width && el.height === height) {
-    return
-  }
-
-  el.width = width
-  el.height = height
 }
