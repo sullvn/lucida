@@ -1,19 +1,56 @@
 import * as React from 'react'
-import { onCanvasLoad } from '../src/init'
+import { FileUpload, Renderer } from '../src'
 
-export default function WebGLSandbox() {
-  return (
-    <main>
-      <canvas
-        ref={onCanvasLoad}
-        style={{
-          width: '600px',
-          height: '400px',
-          border: '0.5px solid white',
-        }}
-      />
-      <style>
-        {`
+interface WebGLSandboxState {
+  renderer: Renderer
+}
+
+export default class WebGLSandbox extends React.Component<
+  {},
+  WebGLSandboxState
+> {
+  state = {
+    renderer: new Renderer(),
+  }
+
+  public onCanvasLoad = (el: HTMLCanvasElement | null) => {
+    if (el === null) {
+      return
+    }
+
+    this.state.renderer.initialize(el)
+    this.state.renderer.render()
+  }
+
+  public onImageLoad = (file: File) => {
+    // Convert to data URI
+    // NOTE: This seems awfully slow... look for alternatives
+    const dataUri = URL.createObjectURL(file)
+    const image = new Image()
+
+    image.onload = () => {
+      // Free memory
+      URL.revokeObjectURL(dataUri)
+      this.state.renderer.loadImage(image)
+      this.state.renderer.render()
+    }
+
+    image.src = dataUri
+  }
+
+  public render() {
+    return (
+      <main>
+        <canvas
+          ref={this.onCanvasLoad}
+          style={{
+            width: '600px',
+            height: '400px',
+            border: '0.5px solid white',
+          }}
+        />
+        <style>
+          {`
           * {
             box-sizing: border-box;
           }
@@ -27,7 +64,9 @@ export default function WebGLSandbox() {
             background: black;
           }
         `}
-      </style>
-    </main>
-  )
+        </style>
+        <FileUpload onUpload={this.onImageLoad} />
+      </main>
+    )
+  }
 }
