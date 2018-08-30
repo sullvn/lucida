@@ -134,7 +134,7 @@ export class Renderer {
 
     // Create uniforms
     const textureLocation = gl.getUniformLocation(program, 'u_texture')
-    gl.uniform1i(textureLocation, gl.TEXTURE0)
+    gl.uniform1i(textureLocation, 0)
 
     // Use vertex attributes for rendering
     gl.bindVertexArray(va)
