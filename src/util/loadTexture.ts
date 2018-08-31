@@ -1,4 +1,7 @@
-export function loadTexture(gl: WebGL2RenderingContext, source: TextureSource) {
+export function loadTexture(
+  gl: WebGL2RenderingContext,
+  source: TextureSource,
+): WebGLTexture {
   // Create texture
   const texture = gl.createTexture()
   if (texture === null) {
@@ -30,6 +33,8 @@ export function loadTexture(gl: WebGL2RenderingContext, source: TextureSource) {
     srcType,
     source,
   )
+
+  return texture
 }
 
 export type TextureSource =
