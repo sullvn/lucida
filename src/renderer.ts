@@ -1,5 +1,5 @@
 import { resizeCanvas, TextureSource } from './util'
-import { ImageShader } from './shaders/ImageShader'
+import { Image, ShaderFlow } from './shaders'
 
 /**
  * Renderer class
@@ -10,44 +10,44 @@ import { ImageShader } from './shaders/ImageShader'
 export class Renderer {
   private canvas: HTMLCanvasElement | null
   private gl: WebGL2RenderingContext | null
-  private shader: ImageShader | null
+  private flow: ShaderFlow | null
 
   public constructor() {
     this.gl = null
     this.canvas = null
-    this.shader = null
+    this.flow = null
   }
 
   /**
    * Refresh the canvas with a new rendered frame
    */
-  public render() {
-    const { canvas, gl, shader } = this
-    if (gl === null || canvas === null) {
-      throw new Error('Cannot render to null canvas or context')
+  public render(source: TextureSource) {
+    const { canvas, flow } = this
+    if (canvas === null) {
+      throw new Error('Cannot render to null canvas')
     }
 
     // Update viewport
     resizeCanvas(canvas)
 
-    // Render with shader
-    if (shader === null) {
+    // Render with flow
+    if (flow === null) {
       throw new Error('Cannot use null shader')
     }
 
-    shader.render(gl.canvas.width, gl.canvas.height)
+    flow.render([{ source }])
   }
 
   public loadImage(source: TextureSource) {
-    const { gl, shader } = this
+    const { gl, flow } = this
     if (gl === null) {
       throw new Error('Cannot load image to null context')
     }
-    if (shader === null) {
-      throw new Error('Cannot load image to null shader')
+    if (flow === null) {
+      throw new Error('Cannot load image to null flow')
     }
 
-    shader.loadImage(source)
+    this.render(source)
   }
 
   /**
@@ -67,6 +67,6 @@ export class Renderer {
       throw new Error('Cannot get WebGL 2 context')
     }
 
-    this.shader = new ImageShader(gl)
+    this.flow = new ShaderFlow(gl, [new Image(gl)])
   }
 }

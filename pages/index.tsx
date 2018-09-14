@@ -19,7 +19,6 @@ export default class WebGLSandbox extends React.Component<
     }
 
     this.state.renderer.initialize(el)
-    this.state.renderer.render()
   }
 
   public onImageLoad = (file: File) => {
@@ -32,7 +31,6 @@ export default class WebGLSandbox extends React.Component<
       // Free memory
       URL.revokeObjectURL(dataUri)
       this.state.renderer.loadImage(image)
-      this.state.renderer.render()
     }
 
     image.src = dataUri

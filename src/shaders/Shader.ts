@@ -3,9 +3,11 @@ import { createProgram, createShader } from '../util'
 /**
  * Shader
  *
- * TODO: Support static compiled programs
+ * TODO:
+ *   - Support static compiled programs
+ *   - Allow linking multiple shader sources together
  */
-export abstract class Shader {
+export abstract class Shader<P = {}> {
   protected readonly program: WebGLProgram
   protected readonly vertexArray: WebGLVertexArrayObject
   protected readonly gl: WebGL2RenderingContext
@@ -30,5 +32,28 @@ export abstract class Shader {
     this.vertexArray = vertexArray
   }
 
-  public abstract render(width: number, height: number): void
+  public abstract render(
+    input: ShaderInput,
+    output: ShaderOutput,
+    props?: P,
+  ): void
+}
+
+export interface ShaderInput {
+  width: number
+  height: number
+}
+
+export type ShaderOutput = FramebufferOutput | CanvasOutput
+
+export interface FramebufferOutput {
+  kind: 'framebuffer'
+  texture: WebGLTexture
+  framebuffer: WebGLFramebuffer
+}
+
+export interface CanvasOutput {
+  kind: 'canvas'
+  texture: null
+  framebuffer: null
 }
