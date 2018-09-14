@@ -1,4 +1,5 @@
 export * from './asserts'
+export * from './createAttribute'
 export * from './createProgram'
 export * from './createShader'
 export * from './loadTexture'

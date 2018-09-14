@@ -1,7 +1,6 @@
 import { ShaderInput, ShaderOutput } from './Shader'
 import { InputShader } from './InputShader'
-import { assertValid, loadTexture } from '../util'
-import { createAttribute } from '../util/createAttribute'
+import { assertValid, createAttribute, loadTexture } from '../util'
 
 export class Image extends InputShader<ImageProps> {
   private readonly textureUniform: WebGLUniformLocation
