@@ -5,8 +5,6 @@ import { createAttribute } from '../util/createAttribute'
 
 export class Image extends InputShader<ImageProps> {
   private readonly textureUniform: WebGLUniformLocation
-  private readonly resolutionUniform: WebGLUniformLocation
-  private readonly sizeUniform: WebGLUniformLocation
 
   public constructor(gl: WebGL2RenderingContext) {
     super(gl, VERTEX_SHADER, FRAGMENT_SHADER)
@@ -16,14 +14,6 @@ export class Image extends InputShader<ImageProps> {
     this.textureUniform = assertValid(
       gl.getUniformLocation(program, 'u_texture'),
       'Image shader: Cannot get texture uniform location',
-    )
-    this.resolutionUniform = assertValid(
-      gl.getUniformLocation(program, 'u_resolution'),
-      'Image shader: Cannot get resolution uniform location',
-    )
-    this.sizeUniform = assertValid(
-      gl.getUniformLocation(program, 'u_size'),
-      'Image shader: Cannot get size uniform location',
     )
 
     // Square geometry
@@ -54,14 +44,7 @@ export class Image extends InputShader<ImageProps> {
   public render(input: ShaderInput, output: ShaderOutput, props: ImageProps) {
     const { width, height } = input
     const { source } = props
-    const {
-      gl,
-      program,
-      vertexArray,
-      textureUniform,
-      resolutionUniform,
-      sizeUniform,
-    } = this
+    const { gl, program, vertexArray, textureUniform } = this
 
     // Use shader program and attributes
     gl.useProgram(program)
@@ -75,8 +58,6 @@ export class Image extends InputShader<ImageProps> {
 
     // Set uniforms
     gl.uniform1i(textureUniform, 0)
-    gl.uniform2f(resolutionUniform, width, height)
-    gl.uniform2f(sizeUniform, source.width, source.height)
 
     // Use framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, output.framebuffer)
@@ -117,9 +98,6 @@ uniform vec2 u_size;
 out vec2 v_texCoord;
 
 void main() {
-  u_resolution * vec2(1., 1.);
-  u_size * vec2(1., 1.);
-
   gl_Position = a_vertex;
   v_texCoord = a_texCoord;
 }
