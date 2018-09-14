@@ -1,9 +1,10 @@
-import { ShaderInput, ShaderOutput } from './Shader'
-import { InputShader } from './InputShader'
-import { assertValid, createAttribute, loadTexture } from '../util'
+import { TextureShader, TextureShaderInput } from './TextureShader'
+import { ShaderOutput } from './Shader'
+import { assertValid, createAttribute } from '../util'
 
-export class Image extends InputShader<ImageProps> {
+export class MultiplyColor extends TextureShader<MultiplyColorProps> {
   private readonly textureUniform: WebGLUniformLocation
+  private readonly multiplyUniform: WebGLUniformLocation
 
   public constructor(gl: WebGL2RenderingContext) {
     super(gl, VERTEX_SHADER, FRAGMENT_SHADER)
@@ -12,7 +13,12 @@ export class Image extends InputShader<ImageProps> {
     // Uniform locations
     this.textureUniform = assertValid(
       gl.getUniformLocation(program, 'u_texture'),
-      'Image shader: Cannot get texture uniform location',
+      'MultiplyColor shader: Cannot get texture uniform location',
+    )
+
+    this.multiplyUniform = assertValid(
+      gl.getUniformLocation(program, 'u_multiply'),
+      'MultiplyColor shader: Cannot get multiply uniform location',
     )
 
     // Square geometry
@@ -40,23 +46,22 @@ export class Image extends InputShader<ImageProps> {
     )
   }
 
-  public render(input: ShaderInput, output: ShaderOutput, props: ImageProps) {
+  public render(
+    input: TextureShaderInput,
+    output: ShaderOutput,
+    props: MultiplyColorProps,
+  ) {
+    const { red = 1, green = 1, blue = 1, alpha = 1 } = props
     const { width, height } = input
-    const { source } = props
-    const { gl, program, vertexArray, textureUniform } = this
+    const { gl, program, vertexArray, textureUniform, multiplyUniform } = this
 
     // Use shader program and attributes
     gl.useProgram(program)
     gl.bindVertexArray(vertexArray)
 
-    // Use texture
-    const texture = loadTexture(gl, source)
-
-    gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-
     // Set uniforms
     gl.uniform1i(textureUniform, 0)
+    gl.uniform4f(multiplyUniform, red, green, blue, alpha)
 
     // Use framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, output.framebuffer)
@@ -74,16 +79,12 @@ export class Image extends InputShader<ImageProps> {
   }
 }
 
-export interface ImageProps {
-  source: ImageSource
+interface MultiplyColorProps {
+  red?: number
+  green?: number
+  blue?: number
+  alpha?: number
 }
-
-export type ImageSource =
-  | ImageData
-  | ImageBitmap
-  | HTMLImageElement
-  | HTMLCanvasElement
-  | HTMLVideoElement
 
 const VERTEX_SHADER = `\
 #version 300 es
@@ -104,12 +105,14 @@ const FRAGMENT_SHADER = `\
 precision mediump float;
 
 uniform sampler2D u_texture;
+uniform vec4 u_multiply;
 
 in vec2 v_texCoord;
 out vec4 outColor;
 
 void main() {
-  outColor = texture(u_texture, v_texCoord);
+  vec4 textureColor = texture(u_texture, v_texCoord);
+  outColor = textureColor * u_multiply;
 }
 `
 

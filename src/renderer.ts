@@ -1,5 +1,5 @@
 import { resizeCanvas, TextureSource } from './util'
-import { Image, ShaderFlow } from './shaders'
+import { Image, MultiplyColor, ShaderFlow } from './shaders'
 
 /**
  * Renderer class
@@ -35,7 +35,7 @@ export class Renderer {
       throw new Error('Cannot use null shader')
     }
 
-    flow.render([{ source }])
+    flow.render([{ source }, { red: 3, green: 3, blue: 5 }])
   }
 
   public loadImage(source: TextureSource) {
@@ -67,6 +67,6 @@ export class Renderer {
       throw new Error('Cannot get WebGL 2 context')
     }
 
-    this.flow = new ShaderFlow(gl, [new Image(gl)])
+    this.flow = new ShaderFlow(gl, [new Image(gl), new MultiplyColor(gl)])
   }
 }

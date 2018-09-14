@@ -62,6 +62,7 @@ export class ShaderFlow {
 
     // Texture
     // TODO: Check for texture unit limit
+    // TODO: Initialize texture with blank data
     const textureUnit = buffers.length
     const texture = assertValid(gl.createTexture(), 'Cannot create texture')
 
