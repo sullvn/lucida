@@ -1,5 +1,5 @@
-import { resizeCanvas, TextureSource } from './util'
-import { Image, MultiplyColor, ShaderFlow } from './shaders'
+import { resizeCanvas } from './util'
+import { Image, ImageSource, MultiplyColor, ShaderGraph } from './lucida'
 
 /**
  * Renderer class
@@ -10,19 +10,19 @@ import { Image, MultiplyColor, ShaderFlow } from './shaders'
 export class Renderer {
   private canvas: HTMLCanvasElement | null
   private gl: WebGL2RenderingContext | null
-  private flow: ShaderFlow | null
+  private graph: ShaderGraph<GraphProps> | null
 
   public constructor() {
     this.gl = null
     this.canvas = null
-    this.flow = null
+    this.graph = null
   }
 
   /**
    * Refresh the canvas with a new rendered frame
    */
-  public render(source: TextureSource) {
-    const { canvas, flow } = this
+  public render(source: ImageSource) {
+    const { canvas, graph } = this
     if (canvas === null) {
       throw new Error('Cannot render to null canvas')
     }
@@ -31,19 +31,19 @@ export class Renderer {
     resizeCanvas(canvas)
 
     // Render with flow
-    if (flow === null) {
+    if (graph === null) {
       throw new Error('Cannot use null shader')
     }
 
-    flow.render([{ source }, { red: 3, green: 3, blue: 5 }])
+    graph.render({ image: source, red: 5 })
   }
 
-  public loadImage(source: TextureSource) {
-    const { gl, flow } = this
+  public loadImage(source: ImageSource) {
+    const { gl, graph } = this
     if (gl === null) {
       throw new Error('Cannot load image to null context')
     }
-    if (flow === null) {
+    if (graph === null) {
       throw new Error('Cannot load image to null flow')
     }
 
@@ -67,6 +67,13 @@ export class Renderer {
       throw new Error('Cannot get WebGL 2 context')
     }
 
-    this.flow = new ShaderFlow(gl, [new Image(gl), new MultiplyColor(gl)])
+    this.graph = new ShaderGraph(gl)
+    this.graph.add(Image, ({ image }) => ({ source: image }))
+    this.graph.add(MultiplyColor, ({ red }) => ({ red }))
   }
+}
+
+interface GraphProps {
+  image: ImageSource
+  red: number
 }
