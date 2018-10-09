@@ -22,20 +22,14 @@ export class Renderer {
    * Refresh the canvas with a new rendered frame
    */
   public render(source: ImageSource) {
-    const { canvas, graph } = this
-    if (canvas === null) {
-      throw new Error('Cannot render to null canvas')
-    }
-
-    // Update viewport
-    resizeCanvas(canvas)
+    const { graph } = this
 
     // Render with flow
     if (graph === null) {
       throw new Error('Cannot use null shader')
     }
 
-    graph.render({ image: source, red: 5 })
+    graph.render({ image: source, red: 2 })
   }
 
   public loadImage(source: ImageSource) {
@@ -66,6 +60,8 @@ export class Renderer {
     if (gl === null) {
       throw new Error('Cannot get WebGL 2 context')
     }
+
+    resizeCanvas(canvas)
 
     this.graph = new ShaderGraph(gl)
     this.graph.add(Image, ({ image }) => ({ source: image }))

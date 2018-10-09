@@ -1,6 +1,6 @@
 import { BaseShader } from './BaseShader'
 import { assertValid, createAttribute } from '../../util'
-import { ShaderOutput, ShaderInput, ShaderInputs } from '../Shader'
+import { ShaderOutput, ShaderInputs } from '../Shader'
 
 export class MultiplyColor extends BaseShader<MultiplyColorProps, 'input'> {
   private readonly textureUniform: WebGLUniformLocation

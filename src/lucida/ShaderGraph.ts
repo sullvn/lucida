@@ -31,12 +31,12 @@ export class ShaderGraph<P = {}> {
   }
 
   public render(props: P): void {
-    const { graph, buffers } = this
+    const { gl, graph, buffers } = this
 
     let inputs: ShaderInputs<any> = {}
     let output: ShaderOutput = {
-      width: 0,
-      height: 0,
+      width: gl.canvas.width,
+      height: gl.canvas.height,
     }
 
     for (let i = 0; i < graph.length; i++) {
@@ -73,6 +73,19 @@ export class ShaderGraph<P = {}> {
     // Use texture in next available texture unit
     gl.activeTexture(gl.TEXTURE0 + textureUnit)
     gl.bindTexture(gl.TEXTURE_2D, texture)
+
+    // Initialize texture memory
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.canvas.width,
+      gl.canvas.height,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      null,
+    )
 
     // Don't repeat
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
