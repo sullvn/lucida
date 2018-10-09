@@ -45,9 +45,9 @@ export class Image extends BaseShader<ImageProps> {
     _inputs: {},
     fb: WebGLFramebuffer | null,
   ): ShaderOutput {
-    const { source } = props
-    const { width, height } = source
     const { gl, program, vertexArray, textureUniform } = this
+    const { source } = props
+    const { width, height } = gl.canvas
 
     // Use shader program and attributes
     gl.useProgram(program)
@@ -101,7 +101,7 @@ out vec2 v_texCoord;
 
 void main() {
   gl_Position = a_vertex;
-  v_texCoord = a_texCoord;
+  v_texCoord = vec2(a_texCoord.s, 1.0 - a_texCoord.t);
 }
 `
 
