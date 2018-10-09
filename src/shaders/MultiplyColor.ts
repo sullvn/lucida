@@ -1,13 +1,13 @@
-import { TextureShader, TextureShaderInput } from './TextureShader'
-import { ShaderOutput } from './Shader'
+import { BaseShader } from './BaseShader'
 import { assertValid, createAttribute } from '../util'
+import { ShaderOutput, ShaderInputs } from '../Shader'
 
-export class MultiplyColor extends TextureShader<MultiplyColorProps> {
+export class MultiplyColor extends BaseShader<MultiplyColorProps, 'input'> {
   private readonly textureUniform: WebGLUniformLocation
   private readonly multiplyUniform: WebGLUniformLocation
 
   public constructor(gl: WebGL2RenderingContext) {
-    super(gl, VERTEX_SHADER, FRAGMENT_SHADER)
+    super(gl, { vertex: VERTEX_SHADER, fragment: FRAGMENT_SHADER })
     const { program, vertexArray } = this
 
     // Uniform locations
@@ -47,24 +47,30 @@ export class MultiplyColor extends TextureShader<MultiplyColorProps> {
   }
 
   public render(
-    input: TextureShaderInput,
-    output: ShaderOutput,
     props: MultiplyColorProps,
-  ) {
-    const { red = 1, green = 1, blue = 1, alpha = 1 } = props
-    const { width, height } = input
+    inputs: ShaderInputs<'input'>,
+    fb: WebGLFramebuffer | null,
+  ): ShaderOutput {
     const { gl, program, vertexArray, textureUniform, multiplyUniform } = this
+    const { red = 1, green = 1, blue = 1, alpha = 1 } = props
+    const {
+      input: { texture, width, height },
+    } = inputs
 
     // Use shader program and attributes
     gl.useProgram(program)
     gl.bindVertexArray(vertexArray)
+
+    // Bind texture to an active texture unit
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, texture)
 
     // Set uniforms
     gl.uniform1i(textureUniform, 0)
     gl.uniform4f(multiplyUniform, red, green, blue, alpha)
 
     // Use framebuffer
-    gl.bindFramebuffer(gl.FRAMEBUFFER, output.framebuffer)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
 
     // Clear and render to viewport
     gl.viewport(0, 0, width, height)
@@ -76,6 +82,8 @@ export class MultiplyColor extends TextureShader<MultiplyColorProps> {
     const drawOffset = 0
     const count = 6
     gl.drawArrays(primitiveType, drawOffset, count)
+
+    return { width, height }
   }
 }
 

@@ -1,12 +1,12 @@
-import { ShaderInput, ShaderOutput } from './Shader'
-import { InputShader } from './InputShader'
+import { BaseShader } from './BaseShader'
+import { ShaderOutput } from '../Shader'
 import { assertValid, createAttribute, loadTexture } from '../util'
 
-export class Image extends InputShader<ImageProps> {
+export class Image extends BaseShader<ImageProps> {
   private readonly textureUniform: WebGLUniformLocation
 
   public constructor(gl: WebGL2RenderingContext) {
-    super(gl, VERTEX_SHADER, FRAGMENT_SHADER)
+    super(gl, { vertex: VERTEX_SHADER, fragment: FRAGMENT_SHADER })
     const { program, vertexArray } = this
 
     // Uniform locations
@@ -40,10 +40,14 @@ export class Image extends InputShader<ImageProps> {
     )
   }
 
-  public render(input: ShaderInput, output: ShaderOutput, props: ImageProps) {
-    const { width, height } = input
-    const { source } = props
+  public render(
+    props: ImageProps,
+    _inputs: {},
+    fb: WebGLFramebuffer | null,
+  ): ShaderOutput {
     const { gl, program, vertexArray, textureUniform } = this
+    const { source } = props
+    const { width, height } = gl.canvas
 
     // Use shader program and attributes
     gl.useProgram(program)
@@ -59,7 +63,7 @@ export class Image extends InputShader<ImageProps> {
     gl.uniform1i(textureUniform, 0)
 
     // Use framebuffer
-    gl.bindFramebuffer(gl.FRAMEBUFFER, output.framebuffer)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
 
     // Clear and render to viewport
     gl.viewport(0, 0, width, height)
@@ -71,6 +75,8 @@ export class Image extends InputShader<ImageProps> {
     const drawOffset = 0
     const count = 6
     gl.drawArrays(primitiveType, drawOffset, count)
+
+    return { width, height }
   }
 }
 
@@ -95,7 +101,7 @@ out vec2 v_texCoord;
 
 void main() {
   gl_Position = a_vertex;
-  v_texCoord = a_texCoord;
+  v_texCoord = vec2(a_texCoord.s, 1.0 - a_texCoord.t);
 }
 `
 

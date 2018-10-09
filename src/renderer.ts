@@ -1,5 +1,6 @@
 import { resizeCanvas } from './util'
-import { Image, ImageSource, MultiplyColor, ShaderGraph } from './lucida'
+import { Image, ImageSource, MultiplyColor } from './shaders'
+import { ShaderGraph } from './ShaderGraph'
 
 /**
  * Renderer class

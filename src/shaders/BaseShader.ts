@@ -1,4 +1,4 @@
-import { createShader, createProgram } from '../../util'
+import { createShader, createProgram } from '../util'
 import { ShaderOutput, Shader, ShaderInputs } from '../Shader'
 
 export abstract class BaseShader<P = {}, I extends string = never>

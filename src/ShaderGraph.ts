@@ -1,5 +1,5 @@
 import { Shader, ShaderConstructor, ShaderInputs, ShaderOutput } from './Shader'
-import { assertValid } from '../util'
+import { assertValid } from './util'
 
 export class ShaderGraph<P = {}> {
   private graph: ShaderNode<P, any, any>[] = []
