@@ -9,13 +9,11 @@ import { ShaderGraph } from './ShaderGraph'
  * context, and any loaded images.
  */
 export class Renderer {
-  private canvas: HTMLCanvasElement | null
   private gl: WebGL2RenderingContext | null
   private graph: ShaderGraph<GraphProps> | null
 
   public constructor() {
     this.gl = null
-    this.canvas = null
     this.graph = null
   }
 
@@ -54,8 +52,6 @@ export class Renderer {
    * @param el Canvas DOM element
    */
   public initialize(canvas: HTMLCanvasElement) {
-    this.canvas = canvas
-
     // Get rendering context
     const gl = (this.gl = canvas.getContext('webgl2'))
     if (gl === null) {
