@@ -50,3 +50,9 @@ test('traverse complicated DAG', t => {
     'h',
   ])
 })
+
+test('traverse number DAG', t => {
+  const dag = new DAG([[0, 1], [0, 2], [1, 3], [2, 3], [3, 4]])
+
+  t.deepEqual(Array.from(dag.traverse()), [0, 1, 2, 3, 4])
+})

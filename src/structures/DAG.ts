@@ -7,28 +7,28 @@ import { assertDefined } from '../util'
  * A two-way representation of a
  * directed acyclic graph.
  */
-export class DAG {
-  protected nodes: Map<ID, Node> = new Map()
+export class DAG<T> {
+  protected nodes: Map<T, Node<T>> = new Map()
 
-  public constructor(edges: [ID, ID][] = []) {
+  public constructor(edges: [T, T][] = []) {
     for (const [src, dst] of edges) {
       this.addEdge(src, dst)
     }
   }
 
-  public addEdge(srcId: ID, dstId: ID): DAG {
+  public addEdge(src: T, dst: T): DAG<T> {
     const { nodes } = this
 
-    this.addNode(srcId).addNode(dstId)
-    if (srcId === dstId) {
+    this.addNode(src).addNode(dst)
+    if (src === dst) {
       return this
     }
 
-    const src = assertDefined(nodes.get(srcId))
-    const dst = assertDefined(nodes.get(dstId))
+    const srcNode = assertDefined(nodes.get(src))
+    const dstNode = assertDefined(nodes.get(dst))
 
-    src.out.add(dstId)
-    dst.in.add(srcId)
+    srcNode.out.add(dst)
+    dstNode.in.add(src)
 
     return this
   }
@@ -36,14 +36,14 @@ export class DAG {
   /**
    * Traverse the graph in topological order
    */
-  public *traverse(): IterableIterator<ID> {
+  public *traverse(): IterableIterator<T> {
     const { nodes } = this
 
     // Find roots of graph
     // Roots are nodes with no dependencies.
     const roots = wu(nodes.values())
       .filter(node => node.in.size === 0)
-      .map<[ID, FrontierNode]>(node => [
+      .map<[T, FrontierNode<T>]>(node => [
         node.id,
         { id: node.id, unexploredIn: 0 },
       ])
@@ -85,7 +85,7 @@ export class DAG {
     }
   }
 
-  private addNode(id: ID): DAG {
+  private addNode(id: T): DAG<T> {
     const { nodes } = this
     if (nodes.has(id)) {
       return this
@@ -101,15 +101,13 @@ export class DAG {
   }
 }
 
-export type ID = string
-
-export interface Node {
-  id: ID
-  in: Set<ID>
-  out: Set<ID>
+export interface Node<T> {
+  id: T
+  in: Set<T>
+  out: Set<T>
 }
 
-interface FrontierNode {
-  id: ID
+interface FrontierNode<T> {
+  id: T
   unexploredIn: number
 }
