@@ -3,7 +3,8 @@
     "moduleResolution": "node",
 
     "jsx": "react",
-    "lib": ["dom", "es2015"],
+    "lib": ["dom", "es2015", "es2017.object"],
+    "downlevelIteration": true,
 
     "strict": true,
     "noFallthroughCasesInSwitch": true,
