@@ -1,6 +1,6 @@
 import { BaseShader } from './BaseShader'
 import { assertValid, createAttribute } from '../util'
-import { ShaderOutput, ShaderInputs } from '../Shader'
+import { ShaderInputs, Size } from '../Shader'
 
 export class MultiplyColor extends BaseShader<MultiplyColorProps, 'input'> {
   private readonly textureUniform: WebGLUniformLocation
@@ -46,11 +46,19 @@ export class MultiplyColor extends BaseShader<MultiplyColorProps, 'input'> {
     )
   }
 
+  public size(
+    _props: MultiplyColorProps,
+    { input }: ShaderInputs<'input'>,
+  ): Size {
+    const { width, height } = input
+    return { width, height }
+  }
+
   public render(
     props: MultiplyColorProps,
     inputs: ShaderInputs<'input'>,
     fb: WebGLFramebuffer | null,
-  ): ShaderOutput {
+  ) {
     const { gl, program, vertexArray, textureUniform, multiplyUniform } = this
     const { red = 1, green = 1, blue = 1, alpha = 1 } = props
     const {
@@ -82,8 +90,6 @@ export class MultiplyColor extends BaseShader<MultiplyColorProps, 'input'> {
     const drawOffset = 0
     const count = 6
     gl.drawArrays(primitiveType, drawOffset, count)
-
-    return { width, height }
   }
 }
 

@@ -1,121 +1,112 @@
-import { Shader, ShaderConstructor, ShaderInputs, ShaderOutput } from './Shader'
-import { assertValid } from './util'
+import {
+  Shader,
+  ShaderConstructor,
+  ShaderInputs,
+  Size,
+  ShaderInput,
+} from './Shader'
+import { createBuffer, ShaderBuffer, assertDefined } from './util'
+import { DAG } from './structures'
 
 export class ShaderGraph<P = {}> {
-  private graph: ShaderNode<P, any, any>[] = []
-  private buffers: ShaderBuffer[] = []
+  private nextKey: NodeKey = 0
+  private nodes: Map<NodeKey, ShaderNode<P, any, any>> = new Map()
+  private graph: DAG<NodeKey> = new DAG()
 
   public constructor(private readonly gl: WebGL2RenderingContext) {
     this.gl = gl
-
-    this.allocateBuffer()
-    this.allocateBuffer()
   }
 
   /**
-   * Add a sahder to the
-   * @param constructShader
-   * @param props
-   * @param deps
+   * Add shader node to graph
+   *
+   * A shader node comprises of:
+   *
+   * - Shader program to render props and inputs
+   * - Props function for deriving shader props from
+   *   the graph props
+   * - Input dependencies key-value map
+   *
+   * @param constructShader shader program constructor
+   * @param propsFn function to derive shader props from graph props
+   * @param dependencies input dependencies key-value map
    */
   public add<SP, I extends string = never>(
     constructShader: ShaderConstructor<SP, I>,
-    props: PropsFn<P, SP>,
-  ): void {
-    const { gl, graph } = this
+    propsFn: PropsFn<P, SP>,
+    dependencies: ShaderDependencies<I>,
+  ): NodeKey {
+    const { gl, nextKey, nodes, graph } = this
 
-    graph.push({
+    // Cheaply create unique keys
+    const key = nextKey
+    this.nextKey += 1
+
+    // Store shader with props function and shader dependencies
+    nodes.set(key, {
       shader: new constructShader(gl),
-      propsFn: props,
+      buffer: createBuffer(gl),
+      size: { width: 0, height: 0 },
+      propsFn,
+      dependencies,
     })
-  }
 
-  public render(props: P): void {
-    const { gl, graph, buffers } = this
-
-    let inputs: ShaderInputs<any> = {}
-    let output: ShaderOutput = {
-      width: gl.canvas.width,
-      height: gl.canvas.height,
+    // Place shader in graph, leading from dependencies
+    const depsKeys: number[] = Object.values(dependencies)
+    for (const dk of depsKeys) {
+      graph.addEdge(dk, key)
     }
 
-    for (let i = 0; i < graph.length; i++) {
-      const { shader, propsFn } = graph[i]
+    return key
+  }
 
-      const isLast = i === graph.length - 1
-      const inputBuffer = buffers[i % 2]
-      const outputBuffer = buffers[(i + 1) % 2]
-      const framebuffer = isLast ? null : outputBuffer.framebuffer
+  public render(graphProps: P): void {
+    const { gl, graph, nodes } = this
 
-      const shaderProps = propsFn(props)
+    const asInput = (nk: NodeKey) => {
+      const n = assertDefined(nodes.get(nk))
+      return {
+        ...n.size,
+        texture: n.buffer.texture,
+      } as ShaderInput
+    }
 
-      inputs = {
-        input: {
-          texture: inputBuffer.texture,
-          width: output.width,
-          height: output.height,
+    for (const { key, terminal } of graph.traverse()) {
+      const node = assertDefined(nodes.get(key))
+      const { shader, propsFn, dependencies, buffer, size: oldSize } = node
+
+      const props = propsFn(graphProps)
+      const inputs = Object.entries(dependencies).reduce(
+        (is, [ik, nk]) => {
+          is[ik] = asInput(nk)
+          return is
         },
+        {} as ShaderInputs<any>,
+      )
+
+      const newSize = (node.size = shader.size(props, inputs))
+      if (newSize.width !== oldSize.width || newSize.height !== oldSize.width) {
+        gl.bindTexture(gl.TEXTURE_2D, buffer.texture)
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          newSize.width,
+          newSize.height,
+          0,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          null,
+        )
       }
 
-      output = shader.render(shaderProps, inputs, framebuffer)
+      const fb = terminal ? null : buffer.framebuffer
+      shader.render(props, inputs, fb)
     }
   }
-
-  private allocateBuffer(): void {
-    const { gl, buffers } = this
-
-    // Texture
-    // TODO: Check for texture unit limit
-    // TODO: Initialize texture with blank data
-    const textureUnit = buffers.length
-    const texture = assertValid(gl.createTexture(), 'Cannot create texture')
-
-    // Use texture in next available texture unit
-    gl.activeTexture(gl.TEXTURE0 + textureUnit)
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-
-    // Initialize texture memory
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      gl.canvas.width,
-      gl.canvas.height,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      null,
-    )
-
-    // Don't repeat
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
-    // Don't require mipmaps
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-
-    // Framebuffer
-    const framebuffer = assertValid(
-      gl.createFramebuffer(),
-      'Cannot create framebuffer',
-    )
-
-    // Attach texture to framebuffer
-    const mipmapLevel = 0
-    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
-    gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.TEXTURE_2D,
-      texture,
-      mipmapLevel,
-    )
-
-    // Add to buffer list
-    this.buffers.push({ texture, framebuffer })
-  }
 }
+
+type NodeKey = number
 
 interface PropsFn<P, SP> {
   (graphProps: P): SP
@@ -123,10 +114,10 @@ interface PropsFn<P, SP> {
 
 interface ShaderNode<P, SP, I extends string = never> {
   shader: Shader<SP, I>
+  buffer: ShaderBuffer
+  size: Size
   propsFn: PropsFn<P, SP>
+  dependencies: ShaderDependencies<I>
 }
 
-interface ShaderBuffer {
-  texture: WebGLTexture
-  framebuffer: WebGLFramebuffer
-}
+type ShaderDependencies<K extends string> = Record<K, NodeKey>

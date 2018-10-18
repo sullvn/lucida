@@ -10,19 +10,31 @@ test('traverse empty DAG', t => {
 test('traverse single-node DAG', t => {
   const dag = new DAG([['a', 'a']])
 
-  t.deepEqual(Array.from(dag.traverse()), ['a'])
+  t.deepEqual(Array.from(dag.traverse()), [
+    { key: 'a', origin: true, terminal: true },
+  ])
 })
 
 test('traverse linear DAG', t => {
   const dag = new DAG([['a', 'b'], ['b', 'c'], ['c', 'd']])
 
-  t.deepEqual(Array.from(dag.traverse()), ['a', 'b', 'c', 'd'])
+  t.deepEqual(Array.from(dag.traverse()), [
+    { key: 'a', origin: true, terminal: false },
+    { key: 'b', origin: false, terminal: false },
+    { key: 'c', origin: false, terminal: false },
+    { key: 'd', origin: false, terminal: true },
+  ])
 })
 
 test('traverse diamond DAG', t => {
   const dag = new DAG([['a', 'b'], ['a', 'c'], ['b', 'd'], ['c', 'd']])
 
-  t.deepEqual(Array.from(dag.traverse()), ['a', 'b', 'c', 'd'])
+  t.deepEqual(Array.from(dag.traverse()), [
+    { key: 'a', origin: true, terminal: false },
+    { key: 'b', origin: false, terminal: false },
+    { key: 'c', origin: false, terminal: false },
+    { key: 'd', origin: false, terminal: true },
+  ])
 })
 
 test('traverse complicated DAG', t => {
@@ -40,19 +52,25 @@ test('traverse complicated DAG', t => {
   ])
 
   t.deepEqual(Array.from(dag.traverse()), [
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'f',
-    'g',
-    'h',
+    { key: 'a', origin: true, terminal: false },
+    { key: 'b', origin: false, terminal: false },
+    { key: 'c', origin: false, terminal: false },
+    { key: 'd', origin: false, terminal: false },
+    { key: 'e', origin: false, terminal: false },
+    { key: 'f', origin: false, terminal: false },
+    { key: 'g', origin: false, terminal: false },
+    { key: 'h', origin: false, terminal: true },
   ])
 })
 
 test('traverse number DAG', t => {
   const dag = new DAG([[0, 1], [0, 2], [1, 3], [2, 3], [3, 4]])
 
-  t.deepEqual(Array.from(dag.traverse()), [0, 1, 2, 3, 4])
+  t.deepEqual(Array.from(dag.traverse()), [
+    { key: 0, origin: true, terminal: false },
+    { key: 1, origin: false, terminal: false },
+    { key: 2, origin: false, terminal: false },
+    { key: 3, origin: false, terminal: false },
+    { key: 4, origin: false, terminal: true },
+  ])
 })

@@ -1,5 +1,5 @@
 import { createShader, createProgram } from '../util'
-import { ShaderOutput, Shader, ShaderInputs } from '../Shader'
+import { Shader, ShaderInputs, Size } from '../Shader'
 
 export abstract class BaseShader<P = {}, I extends string = never>
   implements Shader<P, I> {
@@ -26,11 +26,13 @@ export abstract class BaseShader<P = {}, I extends string = never>
     this.vertexArray = vertexArray
   }
 
+  public abstract size(props: P, inputs: ShaderInputs<I>): Size
+
   public abstract render(
     props: P,
     inputs: ShaderInputs<I>,
     fb: WebGLFramebuffer | null,
-  ): ShaderOutput
+  ): void
 }
 
 export interface ShaderSources {

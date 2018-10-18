@@ -1,13 +1,14 @@
 export interface Shader<P = {}, I extends string = never> {
+  size: (props: P, inputs: ShaderInputs<I>) => Size
   render: (
     props: P,
     // TODO: Fix framebuffers being considered valid inputs
     inputs: ShaderInputs<I>,
     fb: WebGLFramebuffer | null,
-  ) => ShaderOutput
+  ) => void
 }
 
-export interface ShaderOutput {
+export interface Size {
   width: number
   height: number
 }

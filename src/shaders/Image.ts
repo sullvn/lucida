@@ -1,5 +1,5 @@
 import { BaseShader } from './BaseShader'
-import { ShaderOutput } from '../Shader'
+import { Size } from '../Shader'
 import { assertValid, createAttribute, loadTexture } from '../util'
 
 export class Image extends BaseShader<ImageProps> {
@@ -40,14 +40,19 @@ export class Image extends BaseShader<ImageProps> {
     )
   }
 
+  public size({ source }: ImageProps): Size {
+    const { width, height } = source
+    return { width, height }
+  }
+
   public render(
     props: ImageProps,
     _inputs: {},
     fb: WebGLFramebuffer | null,
-  ): ShaderOutput {
+  ): void {
     const { gl, program, vertexArray, textureUniform } = this
     const { source } = props
-    const { width, height } = gl.canvas
+    const { width, height } = source
 
     // Use shader program and attributes
     gl.useProgram(program)
@@ -75,8 +80,6 @@ export class Image extends BaseShader<ImageProps> {
     const drawOffset = 0
     const count = 6
     gl.drawArrays(primitiveType, drawOffset, count)
-
-    return { width, height }
   }
 }
 

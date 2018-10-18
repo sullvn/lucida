@@ -61,8 +61,9 @@ export class Renderer {
     resizeCanvas(canvas)
 
     this.graph = new ShaderGraph(gl)
-    this.graph.add(Image, ({ image }) => ({ source: image }))
-    this.graph.add(MultiplyColor, ({ red }) => ({ red }))
+    this.graph.add(MultiplyColor, ({ red }) => ({ red }), {
+      input: this.graph.add(Image, ({ image }) => ({ source: image }), {}),
+    })
   }
 }
 

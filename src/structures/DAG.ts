@@ -36,7 +36,7 @@ export class DAG<T> {
   /**
    * Traverse the graph in topological order
    */
-  public *traverse(): IterableIterator<T> {
+  public *traverse(): IterableIterator<TraverseResult<T>> {
     const { nodes } = this
 
     // Find roots of graph
@@ -81,7 +81,11 @@ export class DAG<T> {
         frontierNode.unexploredIn -= 1
       }
 
-      yield next.id
+      yield {
+        key: next.id,
+        origin: node.in.size === 0,
+        terminal: node.out.size === 0,
+      }
     }
   }
 
@@ -105,6 +109,12 @@ export interface Node<T> {
   id: T
   in: Set<T>
   out: Set<T>
+}
+
+export interface TraverseResult<T> {
+  key: T
+  origin: boolean
+  terminal: boolean
 }
 
 interface FrontierNode<T> {
