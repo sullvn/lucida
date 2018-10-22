@@ -1,5 +1,5 @@
 import { resizeCanvas } from './util'
-import { Image, ImageSource, MultiplyColor, Fit } from './shaders'
+import { Image, ImageSource, Fit, Mask } from './shaders'
 import { ShaderGraph } from './ShaderGraph'
 
 /**
@@ -9,38 +9,34 @@ import { ShaderGraph } from './ShaderGraph'
  * context, and any loaded images.
  */
 export class Renderer {
-  private gl: WebGL2RenderingContext | null
-  private graph: ShaderGraph<GraphProps> | null
-
-  public constructor() {
-    this.gl = null
-    this.graph = null
-  }
+  private graph: ShaderGraph<GraphProps> | null = null
+  private subjectImage: ImageSource | null = null
+  private maskImage: ImageSource | null = null
 
   /**
    * Refresh the canvas with a new rendered frame
    */
-  public render(source: ImageSource) {
-    const { graph } = this
+  public render() {
+    const { graph, subjectImage, maskImage } = this
 
     // Render with flow
     if (graph === null) {
       throw new Error('Cannot use null shader')
     }
 
-    graph.render({ image: source, red: 2 })
+    if (subjectImage !== null && maskImage !== null) {
+      graph.render({ subject: subjectImage, mask: maskImage })
+    }
   }
 
-  public loadImage(source: ImageSource) {
-    const { gl, graph } = this
-    if (gl === null) {
-      throw new Error('Cannot load image to null context')
-    }
-    if (graph === null) {
-      throw new Error('Cannot load image to null flow')
+  public loadImage(type: 'mask' | 'subject', source: ImageSource) {
+    if (type === 'mask') {
+      this.maskImage = source
+    } else {
+      this.subjectImage = source
     }
 
-    this.render(source)
+    this.render()
   }
 
   /**
@@ -53,7 +49,7 @@ export class Renderer {
    */
   public initialize(canvas: HTMLCanvasElement) {
     // Get rendering context
-    const gl = (this.gl = canvas.getContext('webgl2'))
+    const gl = canvas.getContext('webgl2')
     if (gl === null) {
       throw new Error('Cannot get WebGL 2 context')
     }
@@ -62,14 +58,15 @@ export class Renderer {
 
     const g = (this.graph = new ShaderGraph(gl))
     g.add(Fit, () => ({}), {
-      input: g.add(MultiplyColor, ({ red }) => ({ red }), {
-        input: g.add(Image, ({ image }) => ({ source: image }), {}),
+      input: g.add(Mask, () => ({}), {
+        subject: g.add(Image, ({ subject }) => ({ source: subject }), {}),
+        mask: g.add(Image, ({ mask }) => ({ source: mask }), {}),
       }),
     })
   }
 }
 
 interface GraphProps {
-  image: ImageSource
-  red: number
+  subject: ImageSource
+  mask: ImageSource
 }

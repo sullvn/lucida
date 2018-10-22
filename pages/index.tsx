@@ -21,7 +21,7 @@ export default class WebGLSandbox extends React.Component<
     this.state.renderer.initialize(el)
   }
 
-  public onImageLoad = (file: File) => {
+  public onImageLoad = (type: 'mask' | 'subject') => (file: File) => {
     // Convert to data URI
     // NOTE: This seems awfully slow... look for alternatives
     const dataUri = URL.createObjectURL(file)
@@ -30,7 +30,7 @@ export default class WebGLSandbox extends React.Component<
     image.onload = () => {
       // Free memory
       URL.revokeObjectURL(dataUri)
-      this.state.renderer.loadImage(image)
+      this.state.renderer.loadImage(type, image)
     }
 
     image.src = dataUri
@@ -63,7 +63,14 @@ export default class WebGLSandbox extends React.Component<
           }
         `}
         </style>
-        <FileUpload onUpload={this.onImageLoad} />
+        <label>
+          Subject
+          <FileUpload onUpload={this.onImageLoad('subject')} />
+        </label>
+        <label>
+          Mask
+          <FileUpload onUpload={this.onImageLoad('mask')} />
+        </label>
       </main>
     )
   }
