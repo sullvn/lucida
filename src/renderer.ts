@@ -1,5 +1,5 @@
 import { resizeCanvas } from './util'
-import { Image, ImageSource, MultiplyColor } from './shaders'
+import { Image, ImageSource, MultiplyColor, Fit } from './shaders'
 import { ShaderGraph } from './ShaderGraph'
 
 /**
@@ -60,9 +60,11 @@ export class Renderer {
 
     resizeCanvas(canvas)
 
-    this.graph = new ShaderGraph(gl)
-    this.graph.add(MultiplyColor, ({ red }) => ({ red }), {
-      input: this.graph.add(Image, ({ image }) => ({ source: image }), {}),
+    const g = (this.graph = new ShaderGraph(gl))
+    g.add(Fit, () => ({}), {
+      input: g.add(MultiplyColor, ({ red }) => ({ red }), {
+        input: g.add(Image, ({ image }) => ({ source: image }), {}),
+      }),
     })
   }
 }
