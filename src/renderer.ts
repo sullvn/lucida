@@ -1,5 +1,5 @@
 import { resizeCanvas } from './util'
-import { Image, ImageSource, Fit, Mask } from './shaders'
+import { Image, ImageSource, Fit, Jitter } from './shaders'
 import { ShaderGraph } from './ShaderGraph'
 
 /**
@@ -58,9 +58,8 @@ export class Renderer {
 
     const g = (this.graph = new ShaderGraph(gl))
     g.add(Fit, () => ({}), {
-      input: g.add(Mask, () => ({}), {
+      input: g.add(Jitter, () => ({}), {
         subject: g.add(Image, ({ subject }) => ({ source: subject }), {}),
-        mask: g.add(Image, ({ mask }) => ({ source: mask }), {}),
       }),
     })
   }
