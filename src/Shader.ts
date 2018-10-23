@@ -8,6 +8,7 @@ export interface Shader<P = {}, I extends string = never> {
   ) => void
 }
 
+// TODO: Rename to 'Resolution'?
 export interface Size {
   width: number
   height: number
