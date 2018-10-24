@@ -6,24 +6,21 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "develop": "next",
-    "test": "ava",
-    "build": "next build",
-    "start": "next start"
+    "develop": "parcel examples/index.html",
+    "test": "ava"
   },
   "dependencies": {
-    "@zeit/next-typescript": "^1.1.0",
-    "next": "^7.0.1",
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
     "wu": "^2.1.0"
   },
   "devDependencies": {
-    "@types/next": "^7.0.0",
     "@types/react": "^16.4.11",
+    "@types/react-dom": "^16.0.9",
     "@types/webgl2": "^0.0.4",
     "@types/wu": "^2.1.37",
     "ava": "^1.0.0-rc.1",
+    "parcel-bundler": "^1.10.3",
     "ts-node": "^7.0.1",
     "typescript": "^3.0.3"
   }

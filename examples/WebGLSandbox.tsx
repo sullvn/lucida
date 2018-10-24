@@ -1,12 +1,6 @@
 import * as React from 'react'
-import {
-  Canvas,
-  FileUpload,
-  ShaderGraph,
-  Image as ImageShader,
-  Fit,
-  Jitter,
-} from '../src'
+import { FileUpload } from './components/FileUpload'
+import { Canvas, ShaderGraph, Fit, Jitter, Image as ImageShader } from '../src'
 
 interface WebGLSandboxState {
   primary: HTMLImageElement | null
@@ -18,10 +12,7 @@ interface GraphProps {
   secondary: HTMLImageElement
 }
 
-export default class WebGLSandbox extends React.Component<
-  {},
-  WebGLSandboxState
-> {
+export class WebGLSandbox extends React.Component<{}, WebGLSandboxState> {
   state = {
     primary: null,
     secondary: null,

@@ -1,4 +1,4 @@
-import * as wu from 'wu'
+import wu from 'wu'
 import { assertDefined } from '../util'
 
 /**

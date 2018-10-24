@@ -2,4 +2,7 @@
 /node_modules
 
 # Caches
-/.next
+/.cache
+
+# Artifacts
+/dist

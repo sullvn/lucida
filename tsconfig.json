@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
+    "esModuleInterop": true,
 
     "jsx": "react",
     "lib": ["dom", "es2015", "es2017.object"],
