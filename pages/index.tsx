@@ -1,8 +1,21 @@
 import * as React from 'react'
-import { FileUpload, Renderer } from '../src'
+import {
+  Canvas,
+  FileUpload,
+  ShaderGraph,
+  Image as ImageShader,
+  Fit,
+  Jitter,
+} from '../src'
 
 interface WebGLSandboxState {
-  renderer: Renderer
+  primary: HTMLImageElement | null
+  secondary: HTMLImageElement | null
+}
+
+interface GraphProps {
+  primary: HTMLImageElement
+  secondary: HTMLImageElement
 }
 
 export default class WebGLSandbox extends React.Component<
@@ -10,18 +23,11 @@ export default class WebGLSandbox extends React.Component<
   WebGLSandboxState
 > {
   state = {
-    renderer: new Renderer(),
+    primary: null,
+    secondary: null,
   }
 
-  public onCanvasLoad = (el: HTMLCanvasElement | null) => {
-    if (el === null) {
-      return
-    }
-
-    this.state.renderer.initialize(el)
-  }
-
-  public onImageLoad = (type: 'mask' | 'subject') => (file: File) => {
+  private onImageLoad = (type: 'primary' | 'secondary') => (file: File) => {
     // Convert to data URI
     // NOTE: This seems awfully slow... look for alternatives
     const dataUri = URL.createObjectURL(file)
@@ -30,23 +36,50 @@ export default class WebGLSandbox extends React.Component<
     image.onload = () => {
       // Free memory
       URL.revokeObjectURL(dataUri)
-      this.state.renderer.loadImage(type, image)
+      this.setState({
+        [type]: image,
+      } as Pick<WebGLSandboxState, 'primary' | 'secondary'>)
     }
 
     image.src = dataUri
   }
 
+  private createGraph(gl: WebGL2RenderingContext): ShaderGraph<GraphProps> {
+    const graph = new ShaderGraph<GraphProps>(gl)
+    graph.add(Fit, () => ({}), {
+      input: graph.add(Jitter, () => ({}), {
+        subject: graph.add(
+          ImageShader,
+          ({ primary }) => ({ source: primary }),
+          {},
+        ),
+      }),
+    })
+
+    return graph
+  }
+
   public render() {
-    return (
-      <main>
-        <canvas
-          ref={this.onCanvasLoad}
+    const { primary, secondary } = this.state
+
+    let canvas = null
+    if (primary !== null && secondary !== null) {
+      canvas = (
+        <Canvas
+          props={{ primary, secondary }}
+          graph={this.createGraph}
           style={{
             width: '600px',
             height: '400px',
             border: '0.5px solid white',
           }}
         />
+      )
+    }
+
+    return (
+      <main>
+        {canvas}
         <style>
           {`
           * {
@@ -59,17 +92,18 @@ export default class WebGLSandbox extends React.Component<
             justify-content: center;
             align-items: center;
 
+            color: white;
             background: black;
           }
         `}
         </style>
         <label>
-          Subject
-          <FileUpload onUpload={this.onImageLoad('subject')} />
+          Primary
+          <FileUpload onUpload={this.onImageLoad('primary')} />
         </label>
         <label>
-          Mask
-          <FileUpload onUpload={this.onImageLoad('mask')} />
+          Secondary
+          <FileUpload onUpload={this.onImageLoad('secondary')} />
         </label>
       </main>
     )
