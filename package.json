@@ -1,7 +1,7 @@
 {
-  "name": "webgl-sandbox",
-  "version": "1.0.0",
-  "description": "Sandbox for WebGL experiments",
+  "name": "lucida",
+  "version": "0.0.0",
+  "description": "Library for composing WebGL shaders together",
   "author": "Kevin Sullivan <kevin.sullivan@axolotl.industries>",
   "module": "dist/esm/index.js",
   "main": "dist/cjs/index.js",
