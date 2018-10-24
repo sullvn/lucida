@@ -3,7 +3,7 @@ import { ShaderGraph } from '../ShaderGraph'
 import { assertValid, resizeCanvas } from '../util'
 
 interface CanvasProps<P> extends CanvasDOMProps {
-  graph: (gl: WebGL2RenderingContext) => ShaderGraph<P>
+  children: (gl: WebGL2RenderingContext) => ShaderGraph<P>
   props: P
 }
 
@@ -11,7 +11,7 @@ export class Canvas<P> extends React.Component<CanvasProps<P>> {
   private graph: ShaderGraph<P> | null = null
 
   private onLoad = (el: HTMLCanvasElement | null) => {
-    const { graph: createGraph } = this.props
+    const { children: createGraph } = this.props
 
     if (el === null) {
       return
@@ -28,6 +28,14 @@ export class Canvas<P> extends React.Component<CanvasProps<P>> {
     this.renderGraph()
   }
 
+  public componentDidUpdate({ props: oldProps }: CanvasProps<P>) {
+    const { props: newProps } = this.props
+
+    if (newProps !== oldProps) {
+      this.renderGraph()
+    }
+  }
+
   private renderGraph() {
     const { graph: maybeGraph } = this
     const { props } = this.props
@@ -38,7 +46,7 @@ export class Canvas<P> extends React.Component<CanvasProps<P>> {
   }
 
   public render() {
-    const { graph: _graph, ...domProps } = this.props
+    const { children: _children, ...domProps } = this.props
 
     return <canvas {...domProps} ref={this.onLoad} />
   }

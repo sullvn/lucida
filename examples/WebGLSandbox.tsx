@@ -35,21 +35,6 @@ export class WebGLSandbox extends React.Component<{}, WebGLSandboxState> {
     image.src = dataUri
   }
 
-  private createGraph(gl: WebGL2RenderingContext): ShaderGraph<GraphProps> {
-    const graph = new ShaderGraph<GraphProps>(gl)
-    graph.add(Fit, () => ({}), {
-      input: graph.add(Jitter, () => ({}), {
-        subject: graph.add(
-          ImageShader,
-          ({ primary }) => ({ source: primary }),
-          {},
-        ),
-      }),
-    })
-
-    return graph
-  }
-
   public render() {
     const { primary, secondary } = this.state
 
@@ -58,13 +43,27 @@ export class WebGLSandbox extends React.Component<{}, WebGLSandboxState> {
       canvas = (
         <Canvas
           props={{ primary, secondary }}
-          graph={this.createGraph}
           style={{
             width: '600px',
             height: '400px',
             border: '0.5px solid white',
           }}
-        />
+        >
+          {gl => {
+            const graph = new ShaderGraph<GraphProps>(gl)
+            graph.add(Fit, () => ({}), {
+              input: graph.add(Jitter, () => ({}), {
+                subject: graph.add(
+                  ImageShader,
+                  ({ primary }) => ({ source: primary }),
+                  {},
+                ),
+              }),
+            })
+
+            return graph
+          }}
+        </Canvas>
       )
     }
 
