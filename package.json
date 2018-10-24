@@ -3,10 +3,16 @@
   "version": "1.0.0",
   "description": "Sandbox for WebGL experiments",
   "author": "Kevin Sullivan <kevin.sullivan@axolotl.industries>",
-  "main": "dist/index.js",
+  "module": "dist/esm/index.js",
+  "main": "dist/cjs/index.js",
+  "files": [
+    "dist"
+  ],
   "license": "MIT",
   "scripts": {
-    "build": "rimraf dist && parcel build src/index.ts",
+    "build": "rimraf dist && npm run build:cjs && npm run build:esm",
+    "build:esm": "rimraf dist/esm && tsc --project tsconfig.esm.json",
+    "build:cjs": "rimraf dist/cjs && tsc --project tsconfig.cjs.json",
     "develop": "parcel examples/index.html",
     "test": "ava"
   },
