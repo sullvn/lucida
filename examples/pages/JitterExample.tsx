@@ -41,7 +41,7 @@ export class JitterExample extends React.Component<{}, JitterExampleState> {
           style={{
             width: '600px',
             height: '400px',
-            border: '0.5px solid white',
+            border: '.1rem solid',
           }}
         >
           {gl => {
