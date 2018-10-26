@@ -1,6 +1,6 @@
 import * as React from 'react'
+import { Canvas, ShaderGraph, Fit, Jitter, Image as ImageShader } from 'lucida'
 import { FileUpload } from './components/FileUpload'
-import { Canvas, ShaderGraph, Fit, Jitter, Image as ImageShader } from '../src'
 
 interface WebGLSandboxState {
   primary: HTMLImageElement | null

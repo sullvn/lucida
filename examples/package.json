@@ -1,0 +1,14 @@
+{
+  "name": "lucida-examples",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "develop": "parcel index.html"
+  },
+  "dependencies": {
+    "lucida": "file:../"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.10.3"
+  }
+}
