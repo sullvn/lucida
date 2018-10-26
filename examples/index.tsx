@@ -1,5 +1,5 @@
 import * as React from 'react'
 import { render } from 'react-dom'
-import { WebGLSandbox } from './WebGLSandbox'
+import { Examples } from './Examples'
 
-render(<WebGLSandbox />, document.getElementById('root'))
+render(<Examples />, document.getElementById('root'))
