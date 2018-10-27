@@ -42,6 +42,7 @@ export class Canvas<P> extends React.Component<CanvasProps<P>> {
 
     const graph = assertValid(maybeGraph, 'Cannot render null shader graph')
 
+    performance.mark('render')
     graph.render(props)
   }
 

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { JitterExample } from './pages/JitterExample'
+import { TurbinesExample } from './pages/TurbinesExample'
 
 interface ExamplesState {
   example: ExampleKey
@@ -7,10 +8,12 @@ interface ExamplesState {
 
 enum ExampleKey {
   JITTER = 'jitter',
+  TURBINES = 'turbines',
 }
 
 const ExamplesMap: Record<ExampleKey, typeof React.Component> = {
   jitter: JitterExample,
+  turbines: TurbinesExample,
 }
 
 export class Examples extends React.Component<{}, ExamplesState> {
@@ -29,9 +32,12 @@ export class Examples extends React.Component<{}, ExamplesState> {
     return (
       <div id="examples">
         <header>
-          <h1>Lucida Examples</h1>
+          <h1>Lucida</h1>
           <a href="#jitter" onClick={this.setExample(ExampleKey.JITTER)}>
             Jitter
+          </a>
+          <a href="#turbines" onClick={this.setExample(ExampleKey.TURBINES)}>
+            Turbines
           </a>
         </header>
         <main>
@@ -68,8 +74,12 @@ export class Examples extends React.Component<{}, ExamplesState> {
             margin-right: 2rem;
           }
 
-          h1 {
+          header h1 {
             margin-top: 0;
+          }
+
+          header a {
+            margin-bottom: 1rem;
           }
 
           main {
