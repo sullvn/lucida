@@ -102,11 +102,14 @@ type TurbinesProps = {
 const VERTEX_SHADER = `\
 #version 300 es
 
+const float PI = 3.14159265359;
+const float SQRT_3 = 1.73205080756;
+
 uniform sampler2D u_texture;
 uniform vec2 u_resolution;
 uniform float u_turbineLength;
 
-in vec4 a_vertex;
+in vec2 a_vertex;
 out vec4 v_color;
 
 vec2 fanCell(float index, vec2 resolution, float turbineLength) {
@@ -127,15 +130,33 @@ vec2 fanCenter(float index, vec2 resolution, float turbineLength) {
   return pxCenter;
 }
 
+float lightness(vec4 color) {
+  return sqrt(
+    pow(color.r, 2.) + pow(color.g, 2.) + pow(color.b, 2.)
+  ) / SQRT_3;
+}
+
+mat2 fanRotation(vec4 color) {
+  float angle = .5 * PI * lightness(color);
+  mat2 rotation = mat2(
+    cos(angle), sin(angle),
+    -sin(angle), cos(angle)
+  );
+
+  return rotation;
+}
+
 void main() {
   float index = float(gl_InstanceID);
 
   vec2 center = fanCenter(index, u_resolution, u_turbineLength);
   vec2 textureCenter = .5 * (center + vec2(1., 1.));
-  float scale = u_turbineLength / min(u_resolution.x, u_resolution.y);
+  vec2 scale = vec2(1., .2) * u_turbineLength / min(u_resolution.x, u_resolution.y);
+  vec4 color = texture(u_texture, textureCenter);
+  mat2 rotate = fanRotation(color);
 
-  gl_Position = scale * a_vertex + vec4(center, 0., 1.);
-  v_color = texture(u_texture, textureCenter);
+  gl_Position = vec4(rotate * (scale * a_vertex) + center, 0., 1.);
+  v_color = color;
 }
 `
 
