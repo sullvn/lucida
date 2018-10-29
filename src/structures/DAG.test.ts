@@ -74,3 +74,29 @@ test('traverse number DAG', t => {
     { key: 4, origin: false, terminal: true },
   ])
 })
+
+test('traverse in reverse', t => {
+  const dag = new DAG([
+    ['a', 'b'],
+    ['a', 'c'],
+    ['b', 'd'],
+    ['c', 'd'],
+    ['a', 'e'],
+    ['d', 'e'],
+    ['e', 'f'],
+    ['c', 'g'],
+    ['f', 'g'],
+    ['g', 'h'],
+  ])
+
+  t.deepEqual(Array.from(dag.traverse({ reverse: true })), [
+    { key: 'h', origin: true, terminal: false },
+    { key: 'g', origin: false, terminal: false },
+    { key: 'f', origin: false, terminal: false },
+    { key: 'e', origin: false, terminal: false },
+    { key: 'd', origin: false, terminal: false },
+    { key: 'c', origin: false, terminal: false },
+    { key: 'b', origin: false, terminal: false },
+    { key: 'a', origin: false, terminal: true },
+  ])
+})

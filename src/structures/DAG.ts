@@ -34,18 +34,39 @@ export class DAG<T> {
   }
 
   /**
-   * Traverse the graph in topological order
+   * Traverse the directed graph in topological order
+   *
+   * Options:
+   *
+   * - Reverse
+   *
+   * A quick sketch:
+   *
+   *      o -> o -> o -> o -> o
+   *            \_______7
+   *
+   *    forward ->    <- reverse
    */
-  public *traverse(): IterableIterator<TraverseResult<T>> {
+  public *traverse(
+    options: TraverseOptions = {},
+  ): IterableIterator<TraverseResult<T>> {
     const { nodes } = this
+    const { reverse = false } = options
+
+    const forwardNodes = reverse
+      ? (node: Node<T>) => node.in
+      : (node: Node<T>) => node.out
+    const backwardNodes = reverse
+      ? (node: Node<T>) => node.out
+      : (node: Node<T>) => node.in
 
     // Find roots of graph
     // Roots are nodes with no dependencies.
     const roots = wu(nodes.values())
-      .filter(node => node.in.size === 0)
+      .filter(node => backwardNodes(node).size === 0)
       .map<[T, FrontierNode<T>]>(node => [
         node.id,
-        { id: node.id, unexploredIn: 0 },
+        { id: node.id, unexploredBack: 0 },
       ])
 
     const frontier = new Map(roots)
@@ -54,14 +75,18 @@ export class DAG<T> {
     //
     // For each node:
     //
-    // 1. Find a node with entirely explored input nodes
+    // 1. Find a node with entirely explored neighbor nodes from
+    //    the backwards perspective. Input nodes while going
+    //    forwards; output nodes while going backwards.
     // 2. Remove it from the frontier
-    // 3. Add output nodes to frontier, if not already there
-    // 4. Consider this node as an explored input for outputs
+    // 3. Add forward nodes to frontier, if not already there.
+    //    They are output nodes while going forwards; input
+    //    nodes while going backwards.
+    // 4. Consider this node as explored
     //
     while (frontier.size > 0) {
-      // 1. Find a node with entirely explored input nodes
-      const maybeNext = wu(frontier.values()).find(f => f.unexploredIn === 0)
+      // 1. Find a node with entirely explored backwards nodes
+      const maybeNext = wu(frontier.values()).find(f => f.unexploredBack === 0)
       const next = assertDefined(maybeNext)
 
       // 2. Remove it from the frontier
@@ -69,22 +94,25 @@ export class DAG<T> {
 
       const node = assertDefined(nodes.get(next.id))
 
-      for (const outId of node.out) {
-        // 3. Add output nodes to frontier, if not already there
-        if (!frontier.has(outId)) {
-          const outNode = assertDefined(nodes.get(outId))
-          frontier.set(outId, { id: outId, unexploredIn: outNode.in.size })
+      for (const fwdId of forwardNodes(node)) {
+        // 3. Add forward nodes to frontier, if not already there
+        if (!frontier.has(fwdId)) {
+          const fwdNode = assertDefined(nodes.get(fwdId))
+          frontier.set(fwdId, {
+            id: fwdId,
+            unexploredBack: backwardNodes(fwdNode).size,
+          })
         }
 
         // 4. Consider this node as an explored input for outputs
-        const frontierNode = assertDefined(frontier.get(outId))
-        frontierNode.unexploredIn -= 1
+        const frontierNode = assertDefined(frontier.get(fwdId))
+        frontierNode.unexploredBack -= 1
       }
 
       yield {
         key: next.id,
-        origin: node.in.size === 0,
-        terminal: node.out.size === 0,
+        origin: backwardNodes(node).size === 0,
+        terminal: forwardNodes(node).size === 0,
       }
     }
   }
@@ -117,7 +145,11 @@ export interface TraverseResult<T> {
   terminal: boolean
 }
 
+export interface TraverseOptions {
+  reverse?: boolean
+}
+
 interface FrontierNode<T> {
   id: T
-  unexploredIn: number
+  unexploredBack: number
 }
