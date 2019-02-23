@@ -1,5 +1,5 @@
 import { BaseShader } from './BaseShader'
-import { Size, ShaderInputs } from '../Shader'
+import { Size, ShaderInputs, InputsSizes } from '../Shader'
 import { assertValid, createAttribute } from '../util'
 
 export class Jitter extends BaseShader<{}, 'subject'> {
@@ -45,19 +45,18 @@ export class Jitter extends BaseShader<{}, 'subject'> {
     )
   }
 
-  public size(_props: {}, { subject }: ShaderInputs<'subject'>): Size {
-    const { width, height } = subject
-    return { width, height }
+  public inputsSizes(_props: {}, size: Size) {
+    return { subject: size }
   }
 
   public render(
     _props: {},
     inputs: ShaderInputs<'subject'>,
     fb: WebGLFramebuffer | null,
+    { width, height }: Size,
   ): void {
     const { gl, program, vertexArray, subjectUniform, outputSizeUniform } = this
     const { subject } = inputs
-    const { width, height } = this.size(_props, inputs)
 
     // Use shader program and attributes
     gl.useProgram(program)

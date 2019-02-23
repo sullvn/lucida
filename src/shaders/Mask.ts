@@ -45,19 +45,18 @@ export class Mask extends BaseShader<{}, 'subject' | 'mask'> {
     )
   }
 
-  public size(_props: {}, { subject }: ShaderInputs<'subject' | 'mask'>): Size {
-    const { width, height } = subject
-    return { width, height }
+  public inputsSizes(_props: {}, size: Size) {
+    return { subject: size, mask: size }
   }
 
   public render(
     _props: {},
     inputs: ShaderInputs<'subject' | 'mask'>,
     fb: WebGLFramebuffer | null,
+    { width, height }: Size,
   ): void {
     const { gl, program, vertexArray, subjectUniform, maskUniform } = this
     const { subject, mask } = inputs
-    const { width, height } = this.size(_props, inputs)
 
     // Use shader program and attributes
     gl.useProgram(program)

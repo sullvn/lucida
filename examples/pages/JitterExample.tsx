@@ -1,5 +1,11 @@
 import * as React from 'react'
-import { Canvas, ShaderGraph, Fit, Jitter, Image as ImageShader } from 'lucida'
+import {
+  Canvas,
+  ShaderGraph,
+  Fit,
+  Jitter,
+  Image as ImageShader,
+} from '../../src'
 import { FileUpload } from '../components/FileUpload'
 
 interface JitterExampleState {
@@ -46,15 +52,21 @@ export class JitterExample extends React.Component<{}, JitterExampleState> {
         >
           {gl => {
             const graph = new ShaderGraph<GraphProps>(gl)
-            graph.add(Fit, () => ({}), {
-              input: graph.add(Jitter, () => ({}), {
-                subject: graph.add(
-                  ImageShader,
-                  ({ image }) => ({ source: image }),
-                  {},
-                ),
+            graph.add(
+              Fit,
+              ({ image }) => ({
+                subjectSize: image,
               }),
-            })
+              {
+                subject: graph.add(Jitter, () => ({}), {
+                  subject: graph.add(
+                    ImageShader,
+                    ({ image }) => ({ source: image }),
+                    {},
+                  ),
+                }),
+              },
+            )
 
             return graph
           }}

@@ -37,15 +37,15 @@ export class Turbines extends BaseShader<TurbinesProps, 'input'> {
     )
   }
 
-  public size(_props: TurbinesProps, { input }: ShaderInputs<'input'>): Size {
-    const { width, height } = input
-    return { width, height }
+  public inputsSizes(_props: TurbinesProps, size: Size) {
+    return { input: size }
   }
 
   public render(
     props: TurbinesProps,
     inputs: ShaderInputs<'input'>,
     fb: WebGLFramebuffer | null,
+    { width, height }: Size,
   ) {
     const {
       gl,
@@ -59,7 +59,6 @@ export class Turbines extends BaseShader<TurbinesProps, 'input'> {
     const {
       input: { texture },
     } = inputs
-    const { width, height } = this.size(props, inputs)
 
     // Turbine count is number of square cells which fit
     // in the output resolution

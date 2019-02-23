@@ -37,15 +37,15 @@ export class Pixelate extends BaseShader<PixelateProps, 'input'> {
     )
   }
 
-  public size(_props: PixelateProps, { input }: ShaderInputs<'input'>): Size {
-    const { width, height } = input
-    return { width, height }
+  public inputsSizes(_props: PixelateProps, size: Size) {
+    return { input: size }
   }
 
   public render(
     props: PixelateProps,
     inputs: ShaderInputs<'input'>,
     fb: WebGLFramebuffer | null,
+    { width, height }: Size,
   ) {
     const {
       gl,
@@ -59,7 +59,6 @@ export class Pixelate extends BaseShader<PixelateProps, 'input'> {
     const {
       input: { texture },
     } = inputs
-    const { width, height } = this.size(props, inputs)
 
     const pixelCount =
       Math.floor(width / pixelWidth) * Math.floor(height / pixelWidth)

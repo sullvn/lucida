@@ -1,6 +1,6 @@
 import { BaseShader } from './BaseShader'
-import { Size } from '../Shader'
 import { assertValid, createAttribute, loadTexture } from '../util'
+import { Size } from '../Shader'
 
 export class Image extends BaseShader<ImageProps> {
   private readonly textureUniform: WebGLUniformLocation
@@ -40,19 +40,18 @@ export class Image extends BaseShader<ImageProps> {
     )
   }
 
-  public size({ source }: ImageProps): Size {
-    const { width, height } = source
-    return { width, height }
+  public inputsSizes() {
+    return {}
   }
 
   public render(
     props: ImageProps,
     _inputs: {},
     fb: WebGLFramebuffer | null,
+    { width, height }: Size,
   ): void {
     const { gl, program, vertexArray, textureUniform } = this
     const { source } = props
-    const { width, height } = source
 
     // Use shader program and attributes
     gl.useProgram(program)

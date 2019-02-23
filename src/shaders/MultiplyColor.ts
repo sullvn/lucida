@@ -46,12 +46,8 @@ export class MultiplyColor extends BaseShader<MultiplyColorProps, 'input'> {
     )
   }
 
-  public size(
-    _props: MultiplyColorProps,
-    { input }: ShaderInputs<'input'>,
-  ): Size {
-    const { width, height } = input
-    return { width, height }
+  public inputsSizes(_props: MultiplyColorProps, size: Size) {
+    return { input: size }
   }
 
   public render(

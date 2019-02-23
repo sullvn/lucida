@@ -10,6 +10,7 @@ import { FileUpload } from '../components/FileUpload'
 
 interface TurbinesExampleState {
   image: HTMLImageElement | null
+  bladeLength: number
 }
 
 interface GraphProps {
@@ -20,6 +21,7 @@ interface GraphProps {
 export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
   state = {
     image: null,
+    bladeLength: 20,
   }
 
   private onImageLoad = (file: File) => {
@@ -38,13 +40,13 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
   }
 
   public render() {
-    const { image } = this.state
+    const { image, bladeLength } = this.state
 
     let canvas = null
     if (image) {
       canvas = (
         <Canvas
-          props={{ image, length: 100 }}
+          props={{ image, length: bladeLength }}
           style={{
             width: '600px',
             height: '400px',
@@ -53,15 +55,21 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
         >
           {gl => {
             const graph = new ShaderGraph<GraphProps>(gl)
-            graph.add(Fit, () => ({}), {
-              input: graph.add(Turbines, ({ length }) => ({ length }), {
-                input: graph.add(
-                  ImageShader,
-                  ({ image }) => ({ source: image }),
-                  {},
-                ),
+            graph.add(
+              Fit,
+              ({ image }) => ({
+                subjectSize: image,
               }),
-            })
+              {
+                subject: graph.add(Turbines, ({ length }) => ({ length }), {
+                  input: graph.add(
+                    ImageShader,
+                    ({ image }) => ({ source: image }),
+                    {},
+                  ),
+                }),
+              },
+            )
 
             return graph
           }}
@@ -76,6 +84,15 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
           Image
           <FileUpload onUpload={this.onImageLoad} />
         </label>
+        <input
+          type="range"
+          min={1}
+          max={200}
+          value={bladeLength}
+          onChange={ev =>
+            this.setState({ bladeLength: parseInt(ev.target.value) })
+          }
+        />
       </div>
     )
   }

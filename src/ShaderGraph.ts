@@ -1,17 +1,35 @@
+import { zip } from 'wu'
+
 import {
   Shader,
   ShaderConstructor,
-  ShaderInputs,
   Size,
   ShaderInput,
+  ShaderInputs,
+  equalSizes,
 } from './Shader'
-import { createBuffer, ShaderBuffer, assertDefined } from './util'
-import { DAG } from './structures'
+import { TangledTree, RoseTree } from './structures'
+import { assertValid, createBuffer } from './util'
+import { presizeTexture } from './util/presizeTexture'
 
-export class ShaderGraph<P = {}> {
-  private nextKey: NodeKey = 0
-  private nodes: Map<NodeKey, ShaderNode<P, any, any>> = new Map()
-  private graph: DAG<NodeKey> = new DAG()
+/**
+ * Shader Graph
+ *
+ * ## TODO
+ *
+ * 1. Fix image decoding on every render
+ * 2. Use better terminology. Like kill 'size'.
+ *    It sucks; use `space` and `resolution` instead.
+ * 4. Documentation documentation documentation
+ *
+ * ## Future Todos
+ *
+ * 1. Resize nodes when graph props change
+ */
+export class ShaderGraph<GP = {}> {
+  private definitionTree: TangledTree<AnyDefinitionNode<GP>> = new TangledTree()
+  private executionTree: RoseTree<AnyExecutionNode<GP>> | null = null
+  private lastRenderSize: Size | null = null
 
   public constructor(private readonly gl: WebGL2RenderingContext) {
     this.gl = gl
@@ -33,91 +51,192 @@ export class ShaderGraph<P = {}> {
    */
   public add<SP, I extends string = never>(
     constructShader: ShaderConstructor<SP, I>,
-    propsFn: PropsFn<P, SP>,
-    dependencies: ShaderDependencies<I>,
+    propsFn: PropsFn<GP, SP>,
+    inputs: InputsKeys<I>,
   ): NodeKey {
-    const { gl, nextKey, nodes, graph } = this
+    const { gl, definitionTree } = this
 
-    // Cheaply create unique keys
-    const key = nextKey
-    this.nextKey += 1
+    const shader = new constructShader(gl)
 
-    // Store shader with props function and shader dependencies
-    nodes.set(key, {
-      shader: new constructShader(gl),
-      buffer: createBuffer(gl),
-      size: { width: 0, height: 0 },
-      propsFn,
-      dependencies,
-    })
+    const inputsKeys = Object.keys(inputs)
+    const inputsTreeKeys: number[] = Object.values(inputs)
 
-    // Place shader in graph, leading from dependencies
-    const depsKeys: number[] = Object.values(dependencies)
-    for (const dk of depsKeys) {
-      graph.addEdge(dk, key)
-    }
-
-    return key
+    return definitionTree.add({ shader, propsFn, inputsKeys }, inputsTreeKeys)
   }
 
-  public render(graphProps: P): void {
-    const { gl, graph, nodes } = this
+  /**
+   * Render shader graph
+   *
+   * @param graphProps shader graph props
+   */
+  public render(graphProps: GP): void {
+    const { lastRenderSize } = this
 
-    const asInput = (nk: NodeKey) => {
-      const n = assertDefined(nodes.get(nk))
-      return {
-        ...n.size,
-        texture: n.buffer.texture,
-      } as ShaderInput
+    const executionTree = this.getExecutionTree()
+    const renderSize = this.renderSize()
+
+    // Resolve node output resolutions if the canvas has changed size
+    if (lastRenderSize === null || !equalSizes(lastRenderSize, renderSize)) {
+      this.resolveNode(executionTree, renderSize, graphProps)
     }
 
-    for (const { key, terminal } of graph.traverse()) {
-      const node = assertDefined(nodes.get(key))
-      const { shader, propsFn, dependencies, buffer, size: oldSize } = node
+    this.renderNode(executionTree, graphProps, true)
+  }
 
-      const props = propsFn(graphProps)
-      const inputs = Object.entries(dependencies).reduce(
-        (is, [ik, nk]) => {
-          is[ik] = asInput(nk)
-          return is
-        },
-        {} as ShaderInputs<any>,
-      )
+  /**
+   * Render a single shader node
+   *
+   * @param node shader graph node
+   * @param graphProps shader graph props
+   */
+  private renderNode<SP, I extends string>(
+    node: RoseTree<ExecutionNode<GP, SP, I>>,
+    graphProps: GP,
+    isRoot: boolean,
+  ): void {
+    const { propsFn, shader, inputsKeys, output } = node.value
+    const { framebuffer, size } = assertValid(output)
 
-      const newSize = (node.size = shader.size(props, inputs))
-      if (newSize.width !== oldSize.width || newSize.height !== oldSize.width) {
-        gl.bindTexture(gl.TEXTURE_2D, buffer.texture)
-        gl.texImage2D(
-          gl.TEXTURE_2D,
-          0,
-          gl.RGBA,
-          newSize.width,
-          newSize.height,
-          0,
-          gl.RGBA,
-          gl.UNSIGNED_BYTE,
-          null,
-        )
-      }
+    // Render input nodes first
+    for (const inputNode of node.children) {
+      this.renderNode(inputNode, graphProps, false)
+    }
 
-      const fb = terminal ? null : buffer.framebuffer
-      shader.render(props, inputs, fb)
+    // Get shader inputs
+    const inputsOutputs = node.children.map(c =>
+      outputAsInput(assertValid(c.value.output)),
+    )
+
+    const shaderInputs: ShaderInputs<I> = zip(inputsKeys, inputsOutputs).reduce(
+      (sis, [key, input]) => ({ ...sis, [key]: input }),
+      {} as ShaderInputs<I>,
+    )
+
+    // Render this node
+    const props = propsFn(graphProps)
+    const outputBuffer = isRoot ? null : framebuffer
+
+    shader.render(props, shaderInputs, outputBuffer, size)
+  }
+
+  /**
+   * Resolve output resolutions of a node and its inputs, recursively
+   *
+   * @param node shader graph node
+   * @param renderSize output render size of node
+   * @param graphProps shader graph props
+   */
+  private resolveNode<SP, I extends string>(
+    node: RoseTree<ExecutionNode<GP, SP, I>>,
+    renderSize: Size,
+    graphProps: GP,
+  ): void {
+    const { gl } = this
+
+    // Create node's pre-sized output framebuffer and texture
+    const { width, height } = renderSize
+    const { framebuffer, texture } = createBuffer(gl)
+    presizeTexture(gl, texture, width, height)
+    node.value.output = {
+      size: renderSize,
+      framebuffer,
+      texture,
+    }
+
+    // Generate sizes of inputs' rendered outputs
+    const { propsFn, shader, inputsKeys } = node.value
+    const props = propsFn(graphProps)
+
+    const inputsSizes = shader.inputsSizes(props, renderSize)
+    const childrenSizes = inputsKeys.map(ik => inputsSizes[ik])
+    const inputs = zip(node.children, childrenSizes)
+
+    // Recursively resolve input nodes
+    for (const [inputNode, inputRenderSize] of inputs) {
+      this.resolveNode(inputNode, inputRenderSize, graphProps)
+    }
+  }
+
+  /**
+   * Get execution tree from cache or construction
+   *
+   * It is constructed from the definition tree.
+   *
+   * This involves untangling the execution tree and filling
+   * the resulting tree with some runtime caches:
+   *
+   * - Framebuffers and textures
+   * - Render sizes
+   */
+  private getExecutionTree(): RoseTree<AnyExecutionNode<GP>> {
+    const { definitionTree, executionTree: maybeExecutionTree } = this
+
+    // Prefer cached execution tree
+    if (maybeExecutionTree !== null) {
+      return maybeExecutionTree
+    }
+
+    // Otherwise create it from the definition tree if necessary
+    this.executionTree = definitionTree.untangle().map(node => ({
+      ...node,
+      output: null,
+    }))
+
+    return this.executionTree
+  }
+
+  /**
+   * Render size of final output
+   *
+   * Uses the `width` and `height` fields of the
+   * canvas DOM element. These represent the actual
+   * pixels you can draw to
+   *
+   * They do not represent how the canvas is
+   * displayed on the page due to CSS. That is
+   * `clientWidth` and `clientHeight`.
+   */
+  private renderSize(): Size {
+    const { gl } = this
+
+    return {
+      width: gl.canvas.width,
+      height: gl.canvas.height,
     }
   }
 }
 
-type NodeKey = number
-
-interface PropsFn<P, SP> {
-  (graphProps: P): SP
+interface PropsFn<GP, SP> {
+  (graphProps: GP): SP
 }
 
-interface ShaderNode<P, SP, I extends string = never> {
+interface DefinitionNode<P, SP, I extends string = never> {
   shader: Shader<SP, I>
-  buffer: ShaderBuffer
-  size: Size
   propsFn: PropsFn<P, SP>
-  dependencies: ShaderDependencies<I>
+  inputsKeys: I[]
+}
+type AnyDefinitionNode<P> = DefinitionNode<P, any, any>
+
+interface ExecutionNode<P, SP, I extends string = never>
+  extends DefinitionNode<P, SP, I> {
+  output: ExecutionOutput | null
+}
+type AnyExecutionNode<P> = ExecutionNode<P, any, any>
+
+interface ExecutionOutput {
+  size: Size
+  framebuffer: WebGLFramebuffer
+  texture: WebGLTexture
 }
 
-type ShaderDependencies<K extends string> = Record<K, NodeKey>
+/**
+ * Execution output as input
+ *
+ * @param param0 execution output with size and texture
+ */
+function outputAsInput({ size, texture }: ExecutionOutput): ShaderInput {
+  return { ...size, texture }
+}
+
+type InputsKeys<K extends string> = Record<K, NodeKey>
+type NodeKey = number

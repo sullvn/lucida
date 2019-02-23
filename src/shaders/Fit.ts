@@ -2,7 +2,7 @@ import { BaseShader } from './BaseShader'
 import { assertValid, createAttribute } from '../util'
 import { Size, ShaderInputs } from '../Shader'
 
-export class Fit extends BaseShader<FitProps, 'input'> {
+export class Fit extends BaseShader<FitProps, 'subject'> {
   private readonly textureUniform: WebGLUniformLocation
   private readonly inputSizeUniform: WebGLUniformLocation
   private readonly outputSizeUniform: WebGLUniformLocation
@@ -50,21 +50,20 @@ export class Fit extends BaseShader<FitProps, 'input'> {
     )
   }
 
-  public size({ size }: FitProps): Size {
-    const { gl } = this
+  public inputsSizes({ subjectSize }: FitProps, containerSize: Size) {
+    const [s, c] = [subjectSize, containerSize]
 
-    return size
-      ? size
-      : {
-          width: gl.canvas.width,
-          height: gl.canvas.height,
-        }
+    const fit = 1 / Math.max(s.width / c.width, s.height / c.height)
+    const fitSize = { width: fit * s.width, height: fit * s.height }
+
+    return { subject: fitSize }
   }
 
   public render(
-    props: FitProps,
-    { input }: ShaderInputs<'input'>,
+    _props: {},
+    { subject }: ShaderInputs<'subject'>,
     fb: WebGLFramebuffer | null,
+    { width, height }: Size,
   ) {
     const {
       gl,
@@ -74,7 +73,6 @@ export class Fit extends BaseShader<FitProps, 'input'> {
       inputSizeUniform,
       outputSizeUniform,
     } = this
-    const { width, height } = this.size(props)
 
     // Use shader program and attributes
     gl.useProgram(program)
@@ -82,11 +80,11 @@ export class Fit extends BaseShader<FitProps, 'input'> {
 
     // Bind texture to an active texture unit
     gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, input.texture)
+    gl.bindTexture(gl.TEXTURE_2D, subject.texture)
 
     // Set uniforms
     gl.uniform1i(textureUniform, 0)
-    gl.uniform2f(inputSizeUniform, input.width, input.height)
+    gl.uniform2f(inputSizeUniform, subject.width, subject.height)
     gl.uniform2f(outputSizeUniform, width, height)
 
     // Use framebuffer
@@ -106,7 +104,7 @@ export class Fit extends BaseShader<FitProps, 'input'> {
 }
 
 export interface FitProps {
-  size?: Size
+  subjectSize: Size
 }
 
 const VERTEX_SHADER = `\
