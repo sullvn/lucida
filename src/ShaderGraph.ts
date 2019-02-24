@@ -29,7 +29,6 @@ import { presizeTexture } from './util/presizeTexture'
 export class ShaderGraph<GP = {}> {
   private definitionTree: TangledTree<AnyDefinitionNode<GP>> = new TangledTree()
   private executionTree: RoseTree<AnyExecutionNode<GP>> | null = null
-  private lastRenderSize: Size | null = null
 
   public constructor(private readonly gl: WebGL2RenderingContext) {
     this.gl = gl
@@ -70,17 +69,10 @@ export class ShaderGraph<GP = {}> {
    * @param graphProps shader graph props
    */
   public render(graphProps: GP): void {
-    const { lastRenderSize } = this
-
     const executionTree = this.getExecutionTree()
     const renderSize = this.renderSize()
 
-    // Resolve node output resolutions if the canvas has changed size
-    if (lastRenderSize === null || !equalSizes(lastRenderSize, renderSize)) {
-      this.lastRenderSize = renderSize
-      this.resolveNode(executionTree, renderSize, graphProps)
-    }
-
+    this.resolveNode(executionTree, renderSize, graphProps)
     this.renderNode(executionTree, graphProps, true)
   }
 
@@ -144,19 +136,22 @@ export class ShaderGraph<GP = {}> {
     graphProps: GP,
   ): void {
     const { gl } = this
+    const { propsFn, shader, inputsKeys, output } = node.value
 
-    // Create node's pre-sized output framebuffer and texture
-    const { width, height } = renderSize
-    const { framebuffer, texture } = createBuffer(gl)
-    presizeTexture(gl, texture, width, height)
-    node.value.output = {
-      size: renderSize,
-      framebuffer,
-      texture,
+    // Create node's output framebuffer and texture if
+    // render size is new
+    if (output === null || !equalSizes(output.size, renderSize)) {
+      const { width, height } = renderSize
+      const { framebuffer, texture } = createBuffer(gl)
+      presizeTexture(gl, texture, width, height)
+      node.value.output = {
+        size: renderSize,
+        framebuffer,
+        texture,
+      }
     }
 
     // Generate sizes of inputs' rendered outputs
-    const { propsFn, shader, inputsKeys } = node.value
     const props = propsFn(graphProps)
 
     const inputsSizes = shader.inputsSizes(props, renderSize)
