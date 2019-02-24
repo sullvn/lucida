@@ -61,8 +61,8 @@ export class Examples extends React.Component<{}, ExamplesState> {
             height: 100vh;
             padding: 2rem;
 
-            color: #02111b;
-            background: #fcfcfc;
+            color: #fcfcfc;
+            background: black;
             font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
           }
 
