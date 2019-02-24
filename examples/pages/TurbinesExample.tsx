@@ -5,23 +5,27 @@ import {
   Fit,
   Turbines,
   Image as ImageShader,
+  HSV,
 } from '../../src'
 import { FileUpload } from '../components/FileUpload'
 
 interface TurbinesExampleState {
   image: HTMLImageElement | null
   bladeLength: number
+  rotateHue: number
 }
 
 interface GraphProps {
   length: number
   image: HTMLImageElement
+  rotateHue: number
 }
 
 export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
   state = {
     image: null,
     bladeLength: 20,
+    rotateHue: 0,
   }
 
   private onImageLoad = (file: File) => {
@@ -40,17 +44,16 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
   }
 
   public render() {
-    const { image, bladeLength } = this.state
+    const { image, bladeLength, rotateHue } = this.state
 
     let canvas = null
     if (image) {
       canvas = (
         <Canvas
-          props={{ image, length: bladeLength }}
+          props={{ image, length: bladeLength, rotateHue }}
           style={{
-            width: '1000px',
-            height: '600px',
-            border: '.1rem solid',
+            width: '1200px',
+            height: '1800px',
           }}
         >
           {gl => {
@@ -62,11 +65,13 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
               }),
               {
                 subject: graph.add(Turbines, ({ length }) => ({ length }), {
-                  input: graph.add(
-                    ImageShader,
-                    ({ image }) => ({ source: image }),
-                    {},
-                  ),
+                  input: graph.add(HSV, ({ rotateHue }) => ({ rotateHue }), {
+                    input: graph.add(
+                      ImageShader,
+                      ({ image }) => ({ source: image }),
+                      {},
+                    ),
+                  }),
                 }),
               },
             )
@@ -91,6 +96,15 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
           value={bladeLength}
           onChange={ev =>
             this.setState({ bladeLength: parseInt(ev.target.value) })
+          }
+        />
+        <input
+          type="range"
+          min={0}
+          max={360}
+          value={rotateHue}
+          onChange={ev =>
+            this.setState({ rotateHue: parseFloat(ev.target.value) })
           }
         />
       </div>

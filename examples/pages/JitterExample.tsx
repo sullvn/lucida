@@ -45,9 +45,8 @@ export class JitterExample extends React.Component<{}, JitterExampleState> {
         <Canvas
           props={{ image }}
           style={{
-            width: '1000px',
-            height: '600px',
-            border: '.1rem solid',
+            width: '1200px',
+            height: '700px',
           }}
         >
           {gl => {

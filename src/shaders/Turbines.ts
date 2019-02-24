@@ -111,6 +111,21 @@ uniform float u_turbineLength;
 in vec2 a_vertex;
 out vec4 v_color;
 
+/**
+ * RGB to HSV color space
+ * 
+ * Credit: http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
+ */
+vec3 rgb2hsv(vec3 c) {
+  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
 vec2 fanCell(float index, vec2 resolution, float turbineLength) {
   float columns = floor(resolution.x / turbineLength);
 
@@ -129,14 +144,10 @@ vec2 fanCenter(float index, vec2 resolution, float turbineLength) {
   return pxCenter;
 }
 
-float lightness(vec4 color) {
-  return sqrt(
-    pow(color.r, 2.) + pow(color.g, 2.) + pow(color.b, 2.)
-  ) / SQRT_3;
-}
-
 mat2 fanRotation(vec4 color) {
-  float angle = .5 * PI * lightness(color);
+  float hue = rgb2hsv(color.rgb).x;
+  float angle = 2.0 * PI * hue;
+
   mat2 rotation = mat2(
     cos(angle), sin(angle),
     -sin(angle), cos(angle)
