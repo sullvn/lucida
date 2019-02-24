@@ -48,8 +48,8 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
         <Canvas
           props={{ image, length: bladeLength }}
           style={{
-            width: '600px',
-            height: '400px',
+            width: '1000px',
+            height: '600px',
             border: '.1rem solid',
           }}
         >

@@ -9,7 +9,7 @@ import {
   equalSizes,
 } from './Shader'
 import { TangledTree, RoseTree } from './structures'
-import { assertValid, createBuffer } from './util'
+import { assertValid, createBuffer, equalObjects } from './util'
 import { presizeTexture } from './util/presizeTexture'
 
 /**
@@ -77,6 +77,7 @@ export class ShaderGraph<GP = {}> {
 
     // Resolve node output resolutions if the canvas has changed size
     if (lastRenderSize === null || !equalSizes(lastRenderSize, renderSize)) {
+      this.lastRenderSize = renderSize
       this.resolveNode(executionTree, renderSize, graphProps)
     }
 
@@ -88,21 +89,33 @@ export class ShaderGraph<GP = {}> {
    *
    * @param node shader graph node
    * @param graphProps shader graph props
+   *
+   * @returns if did actually render
    */
   private renderNode<SP, I extends string>(
     node: RoseTree<ExecutionNode<GP, SP, I>>,
     graphProps: GP,
     isRoot: boolean,
-  ): void {
-    const { propsFn, shader, inputsKeys, output } = node.value
+  ): boolean {
+    const { propsFn, shader, inputsKeys, output, lastProps } = node.value
     const { framebuffer, size } = assertValid(output)
+    const outputBuffer = isRoot ? null : framebuffer
 
     // Render input nodes first
-    for (const inputNode of node.children) {
-      this.renderNode(inputNode, graphProps, false)
+    const inputsRendered = node.children.map(inputNode =>
+      this.renderNode(inputNode, graphProps, false),
+    )
+
+    // Don't render node if the props aren't changed
+    const noInputsRendered = inputsRendered.every(r => !r)
+    const props = (node.value.lastProps = propsFn(graphProps))
+    const sameProps = lastProps !== null && equalObjects(lastProps, props)
+
+    if (sameProps && noInputsRendered) {
+      return false
     }
 
-    // Get shader inputs
+    // Get shader inputs to prepare for rendering
     const inputsOutputs = node.children.map(c =>
       outputAsInput(assertValid(c.value.output)),
     )
@@ -112,11 +125,10 @@ export class ShaderGraph<GP = {}> {
       {} as ShaderInputs<I>,
     )
 
-    // Render this node
-    const props = propsFn(graphProps)
-    const outputBuffer = isRoot ? null : framebuffer
-
+    // Render to output buffer (texture or canvas)
     shader.render(props, shaderInputs, outputBuffer, size)
+
+    return true
   }
 
   /**
@@ -180,6 +192,7 @@ export class ShaderGraph<GP = {}> {
     this.executionTree = definitionTree.untangle().map(node => ({
       ...node,
       output: null,
+      lastProps: null,
     }))
 
     return this.executionTree
@@ -220,6 +233,7 @@ type AnyDefinitionNode<P> = DefinitionNode<P, any, any>
 interface ExecutionNode<P, SP, I extends string = never>
   extends DefinitionNode<P, SP, I> {
   output: ExecutionOutput | null
+  lastProps: SP | null
 }
 type AnyExecutionNode<P> = ExecutionNode<P, any, any>
 
