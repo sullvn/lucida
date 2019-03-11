@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { JitterExample } from './pages/JitterExample'
 import { TurbinesExample } from './pages/TurbinesExample'
+import { VideoExample } from './pages/VideoExample'
 
 interface ExamplesState {
   example: ExampleKey
@@ -9,16 +10,18 @@ interface ExamplesState {
 enum ExampleKey {
   JITTER = 'jitter',
   TURBINES = 'turbines',
+  VIDEO = 'video',
 }
 
 const ExamplesMap: Record<ExampleKey, typeof React.Component> = {
   jitter: JitterExample,
   turbines: TurbinesExample,
+  video: VideoExample,
 }
 
 export class Examples extends React.Component<{}, ExamplesState> {
   state = {
-    example: ExampleKey.JITTER,
+    example: ExampleKey.TURBINES,
   }
 
   private setExample = (example: ExampleKey) => () => {
@@ -33,11 +36,14 @@ export class Examples extends React.Component<{}, ExamplesState> {
       <div id="examples">
         <header>
           <h1>Lucida</h1>
+          <a href="#turbines" onClick={this.setExample(ExampleKey.TURBINES)}>
+            Turbines
+          </a>
           <a href="#jitter" onClick={this.setExample(ExampleKey.JITTER)}>
             Jitter
           </a>
-          <a href="#turbines" onClick={this.setExample(ExampleKey.TURBINES)}>
-            Turbines
+          <a href="#turbines" onClick={this.setExample(ExampleKey.VIDEO)}>
+            Video
           </a>
         </header>
         <main>
@@ -46,6 +52,13 @@ export class Examples extends React.Component<{}, ExamplesState> {
         <style>{`
           * {
             box-sizing: border-box;
+          }
+
+          html {
+            color: #fcfcfc;
+            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+
+            background: black;
           }
 
           body {
@@ -60,10 +73,6 @@ export class Examples extends React.Component<{}, ExamplesState> {
             display: flex;
             height: 100vh;
             padding: 2rem;
-
-            color: #fcfcfc;
-            background: black;
-            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
           }
 
           header {
