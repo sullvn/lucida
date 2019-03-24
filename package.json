@@ -14,7 +14,7 @@
     "build:esm": "rimraf dist/esm && tsc --project tsconfig.esm.json",
     "build:cjs": "rimraf dist/cjs && tsc --project tsconfig.cjs.json",
     "develop": "cd examples && npm run develop",
-    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "lint": "eslint 'src/**/*.{ts,tsx}' 'examples/{components,pages}/**/*.{ts,tsx}'",
     "typecheck": "tsc --noEmit",
     "test": "ava"
   },

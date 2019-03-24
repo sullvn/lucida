@@ -17,7 +17,7 @@ interface GraphProps {
 }
 
 export class JitterExample extends React.Component<{}, JitterExampleState> {
-  state = {
+  public state = {
     image: null,
   }
 
@@ -36,7 +36,7 @@ export class JitterExample extends React.Component<{}, JitterExampleState> {
     image.src = dataUri
   }
 
-  public render() {
+  public render(): JSX.Element {
     const { image } = this.state
 
     let canvas = null

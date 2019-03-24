@@ -22,7 +22,7 @@ interface GraphProps {
 }
 
 export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
-  state = {
+  public state = {
     image: null,
     bladeLength: 20,
     rotateHue: 0,
@@ -43,7 +43,7 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
     image.src = dataUri
   }
 
-  public render() {
+  public render(): JSX.Element {
     const { image, bladeLength, rotateHue } = this.state
 
     let canvas = null

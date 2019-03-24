@@ -1,26 +1,27 @@
 import * as React from 'react'
 
-/**
- * FileUpload component
- */
-export function FileUpload(props: FileUploadProps) {
-  const { onUpload = noop } = props
-  return <input type="file" onChange={onChange(onUpload)} />
+const noop = (): void => {}
+
+function onChange(
+  onUpload: (file: File) => void,
+): (ev: React.ChangeEvent<HTMLInputElement>) => void {
+  return ev => {
+    const files = ev.target.files
+    if (files === null || files.length === 0) {
+      return
+    }
+
+    onUpload(files[0])
+  }
 }
 
 interface FileUploadProps {
   onUpload?: (file: File) => void
 }
 
-const onChange = (onUpload: (file: File) => void) => (
-  ev: React.ChangeEvent<HTMLInputElement>,
-) => {
-  const files = ev.target.files
-  if (files === null || files.length === 0) {
-    return
-  }
-
-  onUpload(files[0])
+/**
+ * FileUpload component
+ */
+export function FileUpload({ onUpload = noop }: FileUploadProps): JSX.Element {
+  return <input type="file" onChange={onChange(onUpload)} />
 }
-
-const noop = () => {}

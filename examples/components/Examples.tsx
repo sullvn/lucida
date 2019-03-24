@@ -1,7 +1,7 @@
 import * as React from 'react'
-import { JitterExample } from './pages/JitterExample'
-import { TurbinesExample } from './pages/TurbinesExample'
-import { VideoExample } from './pages/VideoExample'
+import { JitterExample } from '../pages/JitterExample'
+import { TurbinesExample } from '../pages/TurbinesExample'
+import { VideoExample } from '../pages/VideoExample'
 
 interface ExamplesState {
   example: ExampleKey
@@ -20,7 +20,7 @@ const ExamplesMap: Record<ExampleKey, typeof React.Component> = {
 }
 
 export class Examples extends React.Component<{}, ExamplesState> {
-  state = {
+  public state = {
     example: ExampleKey.TURBINES,
   }
 
@@ -28,7 +28,7 @@ export class Examples extends React.Component<{}, ExamplesState> {
     this.setState({ example })
   }
 
-  public render() {
+  public render(): JSX.Element {
     const { example } = this.state
     const Example = ExamplesMap[example]
 

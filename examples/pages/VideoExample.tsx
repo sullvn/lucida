@@ -14,18 +14,18 @@ interface GraphProps {
 }
 
 export class VideoExample extends React.Component<{}, VideoExampleState> {
-  state: VideoExampleState = {
+  public state: VideoExampleState = {
     videoStream: new MediaStream(),
     videoElement: null,
     isVideoPlaying: false,
     time: null,
   }
 
-  public componentDidMount() {
+  public componentDidMount(): void {
     this.getVideoStream()
   }
 
-  public componentWillUnmount() {
+  public componentWillUnmount(): void {
     const { videoStream } = this.state
 
     for (const track of videoStream.getTracks()) {
@@ -33,7 +33,7 @@ export class VideoExample extends React.Component<{}, VideoExampleState> {
     }
   }
 
-  private async getVideoStream() {
+  private async getVideoStream(): Promise<void> {
     const videoStream = await navigator.mediaDevices.getUserMedia({
       video: true,
     })
@@ -53,7 +53,7 @@ export class VideoExample extends React.Component<{}, VideoExampleState> {
     this.setState({ videoElement })
   }
 
-  public renderVideo() {
+  public renderVideo(): JSX.Element {
     const { videoStream } = this.state
 
     if (!videoStream.active) {
@@ -76,7 +76,7 @@ export class VideoExample extends React.Component<{}, VideoExampleState> {
     )
   }
 
-  public renderCanvas() {
+  public renderCanvas(): JSX.Element {
     const { videoElement, isVideoPlaying, time } = this.state
 
     if (videoElement === null || !isVideoPlaying) {
@@ -113,7 +113,7 @@ export class VideoExample extends React.Component<{}, VideoExampleState> {
     )
   }
 
-  public render() {
+  public render(): JSX.Element {
     return (
       <div>
         {this.renderVideo()}
