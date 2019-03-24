@@ -3,7 +3,7 @@
  *
  * @param el Canvas HTML DOM element
  */
-export function resizeCanvas(el: HTMLCanvasElement) {
+export function resizeCanvas(el: HTMLCanvasElement): void {
   const dpr = window.devicePixelRatio || 1
 
   // Lookup size browser is displaying the canvas and

@@ -29,8 +29,8 @@ export interface ShaderInput extends Size {
   texture: WebGLTexture
 }
 
-export type InputsSizes<K extends string> = Record<K, Size>
-export type ShaderInputs<K extends string> = Record<K, ShaderInput>
+export type InputsSizes<K extends string = never> = Record<K, Size>
+export type ShaderInputs<K extends string = never> = Record<K, ShaderInput>
 
 export interface ShaderConstructor<P = {}, I extends string = never> {
   new (gl: WebGL2RenderingContext): Shader<P, I>

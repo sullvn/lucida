@@ -16,7 +16,7 @@ export function createAttribute(
   vertexArray: WebGLVertexArrayObject,
   usage: AttributeUsage,
   layout: AttributeLayout,
-) {
+): void {
   // Load attribute data into buffer
   const buffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)

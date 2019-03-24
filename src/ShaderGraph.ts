@@ -13,24 +13,102 @@ import { assertValid, createBuffer, equalObjects } from './util'
 import { presizeTexture } from './util/presizeTexture'
 
 /**
+ * NodeKey to uniquely identify a shader node in the graph
+ */
+type NodeKey = number
+
+/**
+ * InputsKeys mapping from input names to shader nodes
+ */
+type InputsKeys<K extends string> = Record<K, NodeKey>
+
+/**
+ * PropsFn from graph props to an individual shader props
+ */
+interface PropsFn<GP, SP> {
+  (graphProps: GP): SP
+}
+
+/**
+ * DefinitionNode in the definition tree
+ *
+ * Contains the info for constructing the graph node,
+ * such as:
+ *
+ * - Shader
+ * - Props function from graph to shader
+ * - Mapping of input nodes from their name
+ *
+ */
+interface DefinitionNode<P, SP, I extends string = never> {
+  shader: Shader<SP, I>
+  propsFn: PropsFn<P, SP>
+  inputsKeys: I[]
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyDefinitionNode<P> = DefinitionNode<P, any, any>
+
+/**
+ * ExecutionNode used during rendering
+ *
+ * Contains the definition node information, plus some
+ * extra information for caching:
+ *
+ * - Output framebuffers, textures, and size
+ * - Last shader props for comparison
+ *
+ */
+interface ExecutionNode<P, SP, I extends string = never>
+  extends DefinitionNode<P, SP, I> {
+  output: ExecutionOutput | null
+  lastProps: SP | null
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyExecutionNode<P> = ExecutionNode<P, any, any>
+
+/**
+ * ExecutionOutput of an execution node per render
+ *
+ * Contains the:
+ *
+ * - Output WebGL textures
+ * - Computed output size
+ *
+ */
+interface ExecutionOutput {
+  size: Size
+  framebuffer: WebGLFramebuffer
+  texture: WebGLTexture
+}
+
+/**
+ * Execution output as input
+ *
+ * @param param0 execution output with size and texture
+ */
+function outputAsInput({ size, texture }: ExecutionOutput): ShaderInput {
+  return { ...size, texture }
+}
+
+/**
  * Shader Graph
  *
  * ## TODO
  *
- * 1. Fix image decoding on every render
- * 2. Use better terminology. Like kill 'size'.
+ * 1. Use better terminology. Like kill 'size'.
  *    It sucks; use `space` and `resolution` instead.
- * 4. Documentation documentation documentation
+ * 2. Documentation documentation documentation
+ * 3. Resize nodes when graph props change
  *
- * ## Future Todos
- *
- * 1. Resize nodes when graph props change
  */
 export class ShaderGraph<GP = {}> {
   private definitionTree: TangledTree<AnyDefinitionNode<GP>> = new TangledTree()
   private executionTree: RoseTree<AnyExecutionNode<GP>> | null = null
+  private readonly gl: WebGL2RenderingContext
 
-  public constructor(private readonly gl: WebGL2RenderingContext) {
+  public constructor(gl: WebGL2RenderingContext) {
     this.gl = gl
   }
 
@@ -113,8 +191,11 @@ export class ShaderGraph<GP = {}> {
     )
 
     const shaderInputs: ShaderInputs<I> = zip(inputsKeys, inputsOutputs).reduce(
-      (sis, [key, input]) => ({ ...sis, [key]: input }),
-      {} as ShaderInputs<I>,
+      (sis: Partial<ShaderInputs<I>>, [key, input]) => ({
+        ...sis,
+        [key]: input,
+      }),
+      {},
     )
 
     // Render to output buffer (texture or canvas)
@@ -174,6 +255,7 @@ export class ShaderGraph<GP = {}> {
    *
    * - Framebuffers and textures
    * - Render sizes
+   *
    */
   private getExecutionTree(): RoseTree<AnyExecutionNode<GP>> {
     const { definitionTree, executionTree: maybeExecutionTree } = this
@@ -213,39 +295,3 @@ export class ShaderGraph<GP = {}> {
     }
   }
 }
-
-interface PropsFn<GP, SP> {
-  (graphProps: GP): SP
-}
-
-interface DefinitionNode<P, SP, I extends string = never> {
-  shader: Shader<SP, I>
-  propsFn: PropsFn<P, SP>
-  inputsKeys: I[]
-}
-type AnyDefinitionNode<P> = DefinitionNode<P, any, any>
-
-interface ExecutionNode<P, SP, I extends string = never>
-  extends DefinitionNode<P, SP, I> {
-  output: ExecutionOutput | null
-  lastProps: SP | null
-}
-type AnyExecutionNode<P> = ExecutionNode<P, any, any>
-
-interface ExecutionOutput {
-  size: Size
-  framebuffer: WebGLFramebuffer
-  texture: WebGLTexture
-}
-
-/**
- * Execution output as input
- *
- * @param param0 execution output with size and texture
- */
-function outputAsInput({ size, texture }: ExecutionOutput): ShaderInput {
-  return { ...size, texture }
-}
-
-type InputsKeys<K extends string> = Record<K, NodeKey>
-type NodeKey = number

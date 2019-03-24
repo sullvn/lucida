@@ -1,102 +1,6 @@
 import { BaseShader } from './BaseShader'
 import { assertValid, createAttribute } from '../util'
-import { ShaderInputs, Size } from '../Shader'
-
-export class Turbines extends BaseShader<TurbinesProps, 'input'> {
-  private readonly textureUniform: WebGLUniformLocation
-  private readonly resolutionUniform: WebGLUniformLocation
-  private readonly turbineLengthUniform: WebGLUniformLocation
-
-  public constructor(gl: WebGL2RenderingContext) {
-    super(gl, { vertex: VERTEX_SHADER, fragment: FRAGMENT_SHADER })
-    const { program, vertexArray } = this
-
-    // Uniform locations
-    this.textureUniform = assertValid(
-      gl.getUniformLocation(program, 'u_texture'),
-      'Turbines shader: Cannot get texture uniform location',
-    )
-    this.resolutionUniform = assertValid(
-      gl.getUniformLocation(program, 'u_resolution'),
-      'Turbines shader: Cannot get resolution uniform location',
-    )
-    this.turbineLengthUniform = assertValid(
-      gl.getUniformLocation(program, 'u_turbineLength'),
-      'Turbines shader: Cannot get turbineLength uniform location',
-    )
-
-    // Fan geometry
-    createAttribute(
-      'a_vertex',
-      VERTICES,
-      gl,
-      program,
-      vertexArray,
-      gl.STATIC_DRAW,
-      { size: 2, type: gl.FLOAT },
-    )
-  }
-
-  public inputsSizes(_props: TurbinesProps, size: Size) {
-    return { input: size }
-  }
-
-  public render(
-    props: TurbinesProps,
-    inputs: ShaderInputs<'input'>,
-    fb: WebGLFramebuffer | null,
-    { width, height }: Size,
-  ) {
-    const {
-      gl,
-      program,
-      vertexArray,
-      textureUniform,
-      resolutionUniform,
-      turbineLengthUniform,
-    } = this
-    const { length } = props
-    const {
-      input: { texture },
-    } = inputs
-
-    // Turbine count is number of square cells which fit
-    // in the output resolution
-    const turbineCount =
-      Math.floor(width / length) * Math.floor(height / length)
-
-    // Use shader program and attributes
-    gl.useProgram(program)
-    gl.bindVertexArray(vertexArray)
-
-    // Bind texture to an active texture unit
-    gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-
-    // Set uniforms
-    gl.uniform1i(textureUniform, 0)
-    gl.uniform2f(resolutionUniform, width, height)
-    gl.uniform1f(turbineLengthUniform, length)
-
-    // Use framebuffer
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
-
-    // Clear and render to viewport
-    gl.viewport(0, 0, width, height)
-
-    gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-
-    const primitiveType = gl.TRIANGLES
-    const drawOffset = 0
-    const count = 6
-    gl.drawArraysInstanced(primitiveType, drawOffset, count, turbineCount)
-  }
-}
-
-type TurbinesProps = {
-  length: number
-}
+import { ShaderInputs, Size, InputsSizes } from '../Shader'
 
 const VERTEX_SHADER = `\
 #version 300 es
@@ -192,3 +96,99 @@ const VERTICES = new Float32Array([
   1, -1,
   1, 1,
 ])
+
+interface TurbinesProps {
+  length: number
+}
+
+export class Turbines extends BaseShader<TurbinesProps, 'input'> {
+  private readonly textureUniform: WebGLUniformLocation
+  private readonly resolutionUniform: WebGLUniformLocation
+  private readonly turbineLengthUniform: WebGLUniformLocation
+
+  public constructor(gl: WebGL2RenderingContext) {
+    super(gl, { vertex: VERTEX_SHADER, fragment: FRAGMENT_SHADER })
+    const { program, vertexArray } = this
+
+    // Uniform locations
+    this.textureUniform = assertValid(
+      gl.getUniformLocation(program, 'u_texture'),
+      'Turbines shader: Cannot get texture uniform location',
+    )
+    this.resolutionUniform = assertValid(
+      gl.getUniformLocation(program, 'u_resolution'),
+      'Turbines shader: Cannot get resolution uniform location',
+    )
+    this.turbineLengthUniform = assertValid(
+      gl.getUniformLocation(program, 'u_turbineLength'),
+      'Turbines shader: Cannot get turbineLength uniform location',
+    )
+
+    // Fan geometry
+    createAttribute(
+      'a_vertex',
+      VERTICES,
+      gl,
+      program,
+      vertexArray,
+      gl.STATIC_DRAW,
+      { size: 2, type: gl.FLOAT },
+    )
+  }
+
+  public inputsSizes(_props: TurbinesProps, size: Size): InputsSizes<'input'> {
+    return { input: size }
+  }
+
+  public render(
+    props: TurbinesProps,
+    inputs: ShaderInputs<'input'>,
+    fb: WebGLFramebuffer | null,
+    { width, height }: Size,
+  ): void {
+    const {
+      gl,
+      program,
+      vertexArray,
+      textureUniform,
+      resolutionUniform,
+      turbineLengthUniform,
+    } = this
+    const { length } = props
+    const {
+      input: { texture },
+    } = inputs
+
+    // Turbine count is number of square cells which fit
+    // in the output resolution
+    const turbineCount =
+      Math.floor(width / length) * Math.floor(height / length)
+
+    // Use shader program and attributes
+    gl.useProgram(program)
+    gl.bindVertexArray(vertexArray)
+
+    // Bind texture to an active texture unit
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+
+    // Set uniforms
+    gl.uniform1i(textureUniform, 0)
+    gl.uniform2f(resolutionUniform, width, height)
+    gl.uniform1f(turbineLengthUniform, length)
+
+    // Use framebuffer
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+
+    // Clear and render to viewport
+    gl.viewport(0, 0, width, height)
+
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    const primitiveType = gl.TRIANGLES
+    const drawOffset = 0
+    const count = 6
+    gl.drawArraysInstanced(primitiveType, drawOffset, count, turbineCount)
+  }
+}

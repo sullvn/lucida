@@ -6,7 +6,7 @@ import { zip } from 'wu'
  * @param a any object
  * @param b any object
  */
-export function equalObjects(a: any, b: any): boolean {
+export function equalObjects(a: {}, b: {}): boolean {
   const bothEntries = zip(Object.entries(a), Object.entries(b))
 
   for (const [[ak, av], [bk, bv]] of bothEntries) {

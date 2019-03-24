@@ -28,7 +28,7 @@ export class Canvas<P> extends React.Component<CanvasProps<P>> {
     this.renderGraph()
   }
 
-  public componentDidUpdate({ props: oldProps }: CanvasProps<P>) {
+  public componentDidUpdate({ props: oldProps }: CanvasProps<P>): void {
     const { props: newProps } = this.props
 
     if (newProps !== oldProps) {
@@ -36,7 +36,7 @@ export class Canvas<P> extends React.Component<CanvasProps<P>> {
     }
   }
 
-  private renderGraph() {
+  private renderGraph(): void {
     const { graph: maybeGraph } = this
     const { props } = this.props
 
@@ -45,7 +45,8 @@ export class Canvas<P> extends React.Component<CanvasProps<P>> {
     graph.render(props)
   }
 
-  public render() {
+  public render(): JSX.Element {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { children: _children, props: _props, ...domProps } = this.props
 
     return <canvas {...domProps} ref={this.onLoad} />

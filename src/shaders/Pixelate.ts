@@ -1,100 +1,6 @@
 import { BaseShader } from './BaseShader'
 import { assertValid, createAttribute } from '../util'
-import { ShaderInputs, Size } from '../Shader'
-
-export class Pixelate extends BaseShader<PixelateProps, 'input'> {
-  private readonly textureUniform: WebGLUniformLocation
-  private readonly resolutionUniform: WebGLUniformLocation
-  private readonly pixelWidthUniform: WebGLUniformLocation
-
-  public constructor(gl: WebGL2RenderingContext) {
-    super(gl, { vertex: VERTEX_SHADER, fragment: FRAGMENT_SHADER })
-    const { program, vertexArray } = this
-
-    // Uniform locations
-    this.textureUniform = assertValid(
-      gl.getUniformLocation(program, 'u_texture'),
-      'Pixelate shader: Cannot get texture uniform location',
-    )
-    this.resolutionUniform = assertValid(
-      gl.getUniformLocation(program, 'u_resolution'),
-      'Pixelate shader: Cannot get resolution uniform location',
-    )
-    this.pixelWidthUniform = assertValid(
-      gl.getUniformLocation(program, 'u_pixelWidth'),
-      'Pixelate shader: Cannot get pixelWidth uniform location',
-    )
-
-    // Pixel square geometry
-    createAttribute(
-      'a_vertex',
-      VERTICES,
-      gl,
-      program,
-      vertexArray,
-      gl.STATIC_DRAW,
-      { size: 2, type: gl.FLOAT },
-    )
-  }
-
-  public inputsSizes(_props: PixelateProps, size: Size) {
-    return { input: size }
-  }
-
-  public render(
-    props: PixelateProps,
-    inputs: ShaderInputs<'input'>,
-    fb: WebGLFramebuffer | null,
-    { width, height }: Size,
-  ) {
-    const {
-      gl,
-      program,
-      vertexArray,
-      textureUniform,
-      resolutionUniform,
-      pixelWidthUniform,
-    } = this
-    const { pixelWidth } = props
-    const {
-      input: { texture },
-    } = inputs
-
-    const pixelCount =
-      Math.floor(width / pixelWidth) * Math.floor(height / pixelWidth)
-
-    // Use shader program and attributes
-    gl.useProgram(program)
-    gl.bindVertexArray(vertexArray)
-
-    // Bind texture to an active texture unit
-    gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-
-    // Set uniforms
-    gl.uniform1i(textureUniform, 0)
-    gl.uniform2f(resolutionUniform, width, height)
-    gl.uniform1f(pixelWidthUniform, pixelWidth)
-
-    // Use framebuffer
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
-
-    // Clear and render to viewport
-    gl.viewport(0, 0, width, height)
-
-    gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-
-    const primitiveType = gl.TRIANGLES
-    const drawOffset = 0
-    const count = 6
-    gl.drawArraysInstanced(primitiveType, drawOffset, count, pixelCount)
-  }
-}
-
-type PixelateProps = {
-  pixelWidth: number
-}
+import { ShaderInputs, Size, InputsSizes } from '../Shader'
 
 const VERTEX_SHADER = `\
 #version 300 es
@@ -158,3 +64,97 @@ const VERTICES = new Float32Array([
   1, -1,
   1, 1,
 ])
+
+interface PixelateProps {
+  pixelWidth: number
+}
+
+export class Pixelate extends BaseShader<PixelateProps, 'input'> {
+  private readonly textureUniform: WebGLUniformLocation
+  private readonly resolutionUniform: WebGLUniformLocation
+  private readonly pixelWidthUniform: WebGLUniformLocation
+
+  public constructor(gl: WebGL2RenderingContext) {
+    super(gl, { vertex: VERTEX_SHADER, fragment: FRAGMENT_SHADER })
+    const { program, vertexArray } = this
+
+    // Uniform locations
+    this.textureUniform = assertValid(
+      gl.getUniformLocation(program, 'u_texture'),
+      'Pixelate shader: Cannot get texture uniform location',
+    )
+    this.resolutionUniform = assertValid(
+      gl.getUniformLocation(program, 'u_resolution'),
+      'Pixelate shader: Cannot get resolution uniform location',
+    )
+    this.pixelWidthUniform = assertValid(
+      gl.getUniformLocation(program, 'u_pixelWidth'),
+      'Pixelate shader: Cannot get pixelWidth uniform location',
+    )
+
+    // Pixel square geometry
+    createAttribute(
+      'a_vertex',
+      VERTICES,
+      gl,
+      program,
+      vertexArray,
+      gl.STATIC_DRAW,
+      { size: 2, type: gl.FLOAT },
+    )
+  }
+
+  public inputsSizes(_props: PixelateProps, size: Size): InputsSizes<'input'> {
+    return { input: size }
+  }
+
+  public render(
+    props: PixelateProps,
+    inputs: ShaderInputs<'input'>,
+    fb: WebGLFramebuffer | null,
+    { width, height }: Size,
+  ): void {
+    const {
+      gl,
+      program,
+      vertexArray,
+      textureUniform,
+      resolutionUniform,
+      pixelWidthUniform,
+    } = this
+    const { pixelWidth } = props
+    const {
+      input: { texture },
+    } = inputs
+
+    const pixelCount =
+      Math.floor(width / pixelWidth) * Math.floor(height / pixelWidth)
+
+    // Use shader program and attributes
+    gl.useProgram(program)
+    gl.bindVertexArray(vertexArray)
+
+    // Bind texture to an active texture unit
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+
+    // Set uniforms
+    gl.uniform1i(textureUniform, 0)
+    gl.uniform2f(resolutionUniform, width, height)
+    gl.uniform1f(pixelWidthUniform, pixelWidth)
+
+    // Use framebuffer
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+
+    // Clear and render to viewport
+    gl.viewport(0, 0, width, height)
+
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    const primitiveType = gl.TRIANGLES
+    const drawOffset = 0
+    const count = 6
+    gl.drawArraysInstanced(primitiveType, drawOffset, count, pixelCount)
+  }
+}

@@ -6,6 +6,5 @@
     "declaration": true,
     "outDir": "dist/esm"
   },
-  "include": ["src/**/*"],
   "exclude": ["**/*.test.ts"]
 }
