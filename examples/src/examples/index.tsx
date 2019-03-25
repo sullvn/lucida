@@ -1,7 +1,7 @@
 import * as React from 'react'
-import { JitterExample } from '../pages/JitterExample'
-import { TurbinesExample } from '../pages/TurbinesExample'
-import { VideoExample } from '../pages/VideoExample'
+import { JitterExample } from './JitterExample'
+import { TurbinesExample } from './TurbinesExample'
+import { CameraExample } from './CameraExample'
 
 interface ExamplesState {
   example: ExampleKey
@@ -10,13 +10,13 @@ interface ExamplesState {
 enum ExampleKey {
   JITTER = 'jitter',
   TURBINES = 'turbines',
-  VIDEO = 'video',
+  CAMERA = 'camera',
 }
 
 const ExamplesMap: Record<ExampleKey, typeof React.Component> = {
   jitter: JitterExample,
   turbines: TurbinesExample,
-  video: VideoExample,
+  camera: CameraExample,
 }
 
 export class Examples extends React.Component<{}, ExamplesState> {
@@ -42,8 +42,8 @@ export class Examples extends React.Component<{}, ExamplesState> {
           <a href="#jitter" onClick={this.setExample(ExampleKey.JITTER)}>
             Jitter
           </a>
-          <a href="#turbines" onClick={this.setExample(ExampleKey.VIDEO)}>
-            Video
+          <a href="#turbines" onClick={this.setExample(ExampleKey.CAMERA)}>
+            Camera
           </a>
         </header>
         <main>

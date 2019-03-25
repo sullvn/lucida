@@ -1,7 +1,7 @@
 import * as React from 'react'
-import { Canvas, ShaderGraph, Image, Turbines } from '../../src'
+import { Canvas, ShaderGraph, Image, Turbines } from '../../../src'
 
-interface VideoExampleState {
+interface CameraExampleState {
   videoStream: MediaStream
   videoElement: HTMLVideoElement | null
   isVideoPlaying: boolean
@@ -13,8 +13,8 @@ interface GraphProps {
   time: number
 }
 
-export class VideoExample extends React.Component<{}, VideoExampleState> {
-  public state: VideoExampleState = {
+export class CameraExample extends React.Component<{}, CameraExampleState> {
+  public state: CameraExampleState = {
     videoStream: new MediaStream(),
     videoElement: null,
     isVideoPlaying: false,

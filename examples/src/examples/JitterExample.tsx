@@ -3,29 +3,22 @@ import {
   Canvas,
   ShaderGraph,
   Fit,
-  Turbines,
+  Jitter,
   Image as ImageShader,
-  HSV,
-} from '../../src'
+} from '../../../src'
 import { FileUpload } from '../components/FileUpload'
 
-interface TurbinesExampleState {
+interface JitterExampleState {
   image: HTMLImageElement | null
-  bladeLength: number
-  rotateHue: number
 }
 
 interface GraphProps {
-  length: number
   image: HTMLImageElement
-  rotateHue: number
 }
 
-export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
+export class JitterExample extends React.Component<{}, JitterExampleState> {
   public state = {
     image: null,
-    bladeLength: 20,
-    rotateHue: 0,
   }
 
   private onImageLoad = (file: File) => {
@@ -44,16 +37,16 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
   }
 
   public render(): JSX.Element {
-    const { image, bladeLength, rotateHue } = this.state
+    const { image } = this.state
 
     let canvas = null
     if (image) {
       canvas = (
         <Canvas
-          props={{ image, length: bladeLength, rotateHue }}
+          props={{ image }}
           style={{
             width: '1200px',
-            height: '1800px',
+            height: '700px',
           }}
         >
           {gl => {
@@ -64,14 +57,12 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
                 subjectSize: image,
               }),
               {
-                subject: graph.add(Turbines, ({ length }) => ({ length }), {
-                  input: graph.add(HSV, ({ rotateHue }) => ({ rotateHue }), {
-                    input: graph.add(
-                      ImageShader,
-                      ({ image }) => ({ source: image }),
-                      {},
-                    ),
-                  }),
+                subject: graph.add(Jitter, () => ({}), {
+                  subject: graph.add(
+                    ImageShader,
+                    ({ image }) => ({ source: image }),
+                    {},
+                  ),
                 }),
               },
             )
@@ -89,24 +80,6 @@ export class TurbinesExample extends React.Component<{}, TurbinesExampleState> {
           Image
           <FileUpload onUpload={this.onImageLoad} />
         </label>
-        <input
-          type="range"
-          min={1}
-          max={200}
-          value={bladeLength}
-          onChange={ev =>
-            this.setState({ bladeLength: parseInt(ev.target.value) })
-          }
-        />
-        <input
-          type="range"
-          min={0}
-          max={360}
-          value={rotateHue}
-          onChange={ev =>
-            this.setState({ rotateHue: parseFloat(ev.target.value) })
-          }
-        />
       </div>
     )
   }

@@ -1,5 +1,5 @@
 import * as React from 'react'
 import { render } from 'react-dom'
-import { Examples } from './components/Examples'
+import { Examples } from './examples'
 
 render(<Examples />, document.getElementById('root'))

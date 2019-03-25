@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
-    "develop": "parcel index.html"
+    "develop": "parcel src/index.html"
   },
   "dependencies": {
     "lucida": "file:../",
