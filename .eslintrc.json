@@ -22,5 +22,10 @@
     "react": {
       "version": "detect"
     }
+  },
+  "rules": {
+    "@typescript-eslint/explicit-function-return-type": {
+      "allowExpression": true
+    }
   }
 }
