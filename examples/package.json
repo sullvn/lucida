@@ -6,13 +6,13 @@
     "develop": "parcel src/index.html"
   },
   "dependencies": {
-    "lucida": "file:../",
-    "react": "^16.6.0",
-    "react-dom": "^16.6.0"
+    "lucida": "file:..",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   },
   "devDependencies": {
-    "@types/react": "^16.4.18",
-    "@types/react-dom": "^16.0.9",
-    "parcel-bundler": "^1.10.3"
+    "@types/react": "^16.8.17",
+    "@types/react-dom": "^16.8.4",
+    "parcel-bundler": "^1.12.3"
   }
 }
